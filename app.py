@@ -348,6 +348,42 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 #chatpanel #chips {margin-top:2px !important;}
 #chatpanel #chips button {font-size:.78rem !important; padding:4px 10px !important;}
 #chatpanel #ask textarea {font-size:.9rem !important;}
+/* ---- chat popup layout: fixed header and composer, scrolling messages ---- */
+#chatpanel {display:flex !important; flex-direction:column !important; overflow:hidden !important; padding:0 !important;
+  height:min(640px, 74vh) !important; animation:pop-in .18s ease-out;}
+@keyframes pop-in {from {opacity:0; transform:translateY(12px) scale(.98);} to {opacity:1; transform:none;}}
+#chatpanel > *:not(#pane-home):not(#pane-messages):not(#chatnav) {flex:0 0 auto !important;}
+#chatpanel #chat-head {margin:0 !important; border-radius:20px 20px 0 0 !important; padding:12px 16px !important;}
+#pane-home {flex:1 1 auto !important; min-height:0 !important; overflow-y:auto !important; padding:0 0 10px !important;}
+#pane-messages {flex:1 1 auto !important; min-height:0 !important; overflow:hidden !important; display:flex !important;
+  flex-direction:column !important; padding:8px 12px 0 !important;}
+#pane-messages > * {flex:0 0 auto;}
+#pane-messages .thread {flex:1 1 auto !important; height:auto !important; min-height:120px !important; overflow-y:auto;}
+#pane-home > * {margin-left:14px; margin-right:14px;}
+#pane-home #send-btn {margin-left:14px !important; margin-right:14px !important; width:auto !important;}
+#pane-home .pop-banner {margin:0 0 14px !important; border-radius:0 !important;}
+#pane-home .home-card {margin:0 14px 10px !important;}
+#pane-home .home-link {margin:0 14px 10px !important;}
+#pane-home .sec {margin:12px 14px 6px !important;}
+#pane-home .starter {margin:0 14px 6px !important; width:calc(100% - 28px) !important; font-size:.9rem !important; border-radius:12px !important;}
+#chatpanel #chips {padding:0 !important; margin:4px 0 0 !important; gap:6px !important;}
+#chatpanel #chips button {background:#f4f4f5 !important; border:0 !important; border-radius:999px !important; color:#0b0b0c !important;
+  font-size:.8rem !important; padding:5px 11px !important;}
+#chatpanel #chips button::before {content:none !important; display:none !important;}
+#chatpanel #chips button:hover {background:#e4e4e7 !important; color:#0b0b0c !important;}
+#chatpanel #composer {padding:6px 0 0 !important; gap:4px !important; max-width:none !important;}
+#chatpanel #ask {border-radius:999px !important; padding:2px 4px 2px 14px !important; background:#f4f4f5 !important; border:0 !important;}
+#chatpanel #ask:focus-within {box-shadow:0 0 0 2px #0b0b0c !important; background:#ffffff !important;}
+#chatpanel #ask button {padding:6px 14px !important; font-size:.85rem !important;}
+#chatpanel .fine {font-size:.7rem !important; margin:2px 0 0 !important; text-align:center;}
+#chatpanel #opts {padding:0 !important; margin:2px 0 4px !important; max-width:none !important;}
+#chatpanel #newchat {align-self:flex-end; margin:0 0 4px !important;}
+#chatnav {margin:0 !important; border-radius:0 0 20px 20px !important; padding:10px 12px !important;}
+@media (max-width: 600px) {
+  #chatpanel {left:10px !important; right:10px !important; width:auto !important; bottom:86px !important; height:76vh !important;}
+  #chat-launch {right:16px !important; bottom:16px !important;}
+}
+
 
 
 
@@ -750,8 +786,8 @@ def build_ui(bot):
                     "<div class='chat-sub'>Museum guide for works on view</div></div>"
                 )
                 close_btn = gr.Button("✕", elem_id="chat-close", size="sm")
-            gr.HTML(popup_banner_html())
             with gr.Column(visible=True, elem_id="pane-home") as pane_home:
+                gr.HTML(popup_banner_html())
                 gr.HTML(home_html())
                 send_btn = gr.Button("Send us a message", elem_id="send-btn", variant="primary")
                 gr.HTML("<p class='sec'>Popular questions</p>")
@@ -776,9 +812,7 @@ def build_ui(bot):
                         lines=1,
                         max_lines=4,
                     )
-                    gr.HTML(
-                        "<p class='fine'>Gallery locations can change. Check the moma.org link before you go.</p>"
-                    )
+                    gr.HTML("<p class='fine'>Check moma.org for hours and gallery changes.</p>")
                 with gr.Row(elem_id="opts"):
                     on_view_only = gr.Checkbox(
                         value=True, label="Only list works that are on view", container=False
