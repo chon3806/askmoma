@@ -456,7 +456,13 @@ def works_html(cards: list[dict], limit: int = 6) -> str:
 
 def thread_html(history: list) -> str:
     if not history:
-        return f"<div class='thread'><div class='inner'>{welcome_html()}</div></div>"
+        greeting = (
+            "<div class='row-a'><div class='avatar'>A</div><div class='ans'><div class='card'>"
+            "<p>Hi! I'm AskMoMA. I can tell you where a work is, who made it, what else an artist "
+            "made, and what to see next.</p>"
+            "<p>Try one of the questions below, or pick a floor on the page.</p></div></div></div>"
+        )
+        return f"<div class='thread'><div class='inner'>{greeting}</div></div>"
     rows = []
     for q, a, cards in history:
         rows.append(f"<div class='row-u'><div class='bubble'>{_e(q)}</div></div>")
@@ -612,6 +618,7 @@ def build_ui(bot):
         gr.HTML(header_html())
         gr.HTML(hero_html())
         with gr.Column(elem_id="body"):
+            gr.HTML(welcome_html())
             gr.HTML(about_html(col))
             gr.HTML("<p class='sec'>Browse by floor</p>")
             with gr.Row(elem_id="floors"):
