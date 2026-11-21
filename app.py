@@ -313,12 +313,6 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .art em.credit a, a.credit {color:#52525b;}
 .hero-credit {color:#e4e4e7 !important; margin-top:14px; font-size:.85rem; text-decoration:underline;}
 .featured {margin-top:14px;}
-.site-footer {display:grid; width:100%; box-sizing:border-box; clear:both; grid-template-columns:1fr 1.4fr; gap:32px; margin-top:56px; padding:32px 0 8px; border-top:1px solid #e4e4e7; color:#3f3f46;}
-.site-footer b {color:#0b0b0c; font-size:1.05rem;}
-.site-footer p, .site-footer li {font-size:.92rem; line-height:1.6;}
-.site-footer ul {padding-left:18px; margin:8px 0 0;}
-.site-footer a {color:#0b0b0c; font-weight:600;}
-@media (max-width: 760px) {.site-footer {grid-template-columns:1fr;}}
 
 /* ---- chat popup header and close button ---- */
 #chat-head {display:flex !important; justify-content:space-between; align-items:center; margin:0 0 4px !important;}
@@ -401,6 +395,26 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .visit a:hover {background:#ffffff; color:#0b0b0c;}
 @media (max-width: 760px) {.facts {grid-template-columns:1fr;}}
 #chat-launch.secondary {background:#ffffff !important; color:#0b0b0c !important; border:1px solid #d4d4d8 !important; width:auto !important; min-width:0 !important; padding:0 20px !important; border-radius:999px !important;}
+/* ---- footer: dark, to mark the end of the page ---- */
+.ft {margin-top:64px; background:#0b0b0c; color:#a1a1aa; border-radius:24px 24px 0 0; padding:48px 40px 0; width:100%; box-sizing:border-box;}
+.ft-grid {display:grid; grid-template-columns:1.4fr 1fr 1fr 1.2fr; gap:36px; padding-bottom:36px; border-bottom:1px solid #27272a;}
+.ft h4 {font-family:ui-monospace, Menlo, monospace; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:#71717a; margin:0 0 12px; font-weight:500;}
+.ft ul {list-style:none; padding:0; margin:0;}
+.ft li {margin-bottom:9px; font-size:.92rem; line-height:1.45;}
+.ft a {color:#e4e4e7; text-decoration:none; font-weight:500;}
+.ft a:hover {color:#ffffff; text-decoration:underline;}
+.ft-logo {font-weight:900; font-size:1.5rem; color:#ffffff; letter-spacing:-.02em; margin-bottom:12px;}
+.ft-brand p {margin:0 0 10px; font-size:.92rem; line-height:1.6; max-width:40ch;}
+.ft-note {font-size:.82rem !important; color:#71717a;}
+.ft-bar {display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:20px 0 28px; font-size:.82rem;}
+.ft-bar a {color:#e4e4e7; text-decoration:none;}
+@media (max-width: 900px) {.ft-grid {grid-template-columns:1fr 1fr;}}
+@media (max-width: 560px) {.ft {padding:36px 22px 0;} .ft-grid {grid-template-columns:1fr;}}
+
+/* ---- header: stays on top while scrolling ---- */
+.mh {position:sticky; top:0; z-index:60; backdrop-filter:saturate(1.4) blur(10px); background:rgba(255,255,255,.92) !important;}
+.mh-nav a {transition:opacity .15s;}
+.mh-nav a:hover {opacity:.6; text-decoration:none !important;}
 @media (max-width: 600px) {
   #chatpanel {left:10px !important; right:10px !important; width:auto !important; bottom:86px !important; height:76vh !important;}
   #chat-launch {right:16px !important; bottom:16px !important;}
@@ -708,23 +722,44 @@ def home_html() -> str:
 
 
 def footer_html(col) -> str:
+    link = "<a href='{u}' target='_blank' rel='noopener'>{t} &#8599;</a>"
     return (
-        "<div class='site-footer'>"
-        "<div><b>AskMoMA</b>"
-        "<p>A student project for MSAI-631 at the University of the Cumberlands. "
-        "Not affiliated with The Museum of Modern Art.</p>"
-        "<a href='https://github.com/chon3806/askmoma' target='_blank' rel='noopener'>View the code on GitHub &#8599;</a>"
-        "</div>"
-        "<div><b>References</b><ul>"
-        "<li>Artwork and artist data: MoMA public collection, CC0, "
-        "<a href='https://github.com/MuseumofModernArt/collection' target='_blank' rel='noopener'>GitHub dataset</a>"
-        f" (as of {_e(col.as_of)}).</li>"
-        "<li>Images and work pages: <a href='https://www.moma.org' target='_blank' rel='noopener'>moma.org</a>, "
-        "credited under each image.</li>"
+        "<footer class='ft'><div class='ft-grid'>"
+        "<div class='ft-brand'><div class='ft-logo'>AskMoMA</div>"
+        "<p>A guide to the works on view at The Museum of Modern Art, built from MoMA's public collection data.</p>"
+        "<p class='ft-note'>A student project for MSAI-631 at the University of the Cumberlands. "
+        "Not affiliated with The Museum of Modern Art.</p></div>"
+        "<div><h4>Visit MoMA</h4><ul>"
+        + "".join(
+            f"<li>{link.format(u=u, t=t)}</li>"
+            for u, t in [
+                ("https://www.moma.org/visit", "Plan your visit"),
+                ("https://www.moma.org/calendar/exhibitions", "Exhibitions"),
+                ("https://www.moma.org/calendar/events", "Events"),
+                ("https://www.moma.org", "moma.org"),
+            ]
+        )
+        + "</ul></div>"
+        "<div><h4>Collection</h4><ul>"
+        + "".join(
+            f"<li>{link.format(u=u, t=t)}</li>"
+            for u, t in [
+                ("https://www.moma.org/collection/", "Browse the collection"),
+                ("https://www.moma.org/artists", "Artists"),
+                ("https://github.com/MuseumofModernArt/collection", "Open dataset (CC0)"),
+            ]
+        )
+        + "</ul></div>"
+        "<div><h4>Credits</h4><ul>"
+        f"<li>Artwork and artist data: MoMA, CC0 (as of {_e(col.as_of)}).</li>"
+        "<li>Images: moma.org, credited under each picture.</li>"
         "<li>Built with Gradio, pandas and scikit-learn.</li>"
-        "<li>Fonts: Inter and Instrument Serif (Google Fonts).</li>"
+        "<li>Fonts: Inter and Instrument Serif.</li>"
         "</ul></div>"
         "</div>"
+        "<div class='ft-bar'><span>&copy; 2026 AskMoMA student project</span>"
+        "<a href='https://github.com/chon3806/askmoma' target='_blank' rel='noopener'>Source code on GitHub &#8599;</a>"
+        "</div></footer>"
     )
 
 
