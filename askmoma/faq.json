@@ -1,0 +1,30 @@
+{
+  "hours": {
+    "answer": "MoMA (11 West 53 Street) is open **10:30 a.m.–5:30 p.m.** Saturday through Thursday, and **10:30 a.m.–8:30 p.m. on Fridays**. It's closed on Thanksgiving and Christmas, and galleries close about 15 minutes before the museum does.",
+    "source": "https://www.moma.org/visit/",
+    "source_title": "Plan your visit, moma.org",
+    "checked": "November 21, 2026",
+    "suggestions": ["How much is admission?", "Is there free admission?"]
+  },
+  "admission": {
+    "answer": "Admission is **$30** for adults, **$22** for seniors (65+ with ID) and visitors with disabilities, **$17** for full-time students with ID, and **free** for children 16 and under and for members. New York State residents get free admission on Friday nights, 5:30–8:30 p.m. (reserve free tickets in advance).",
+    "source": "https://www.moma.org/visit/",
+    "source_title": "Plan your visit, moma.org",
+    "checked": "November 21, 2026",
+    "suggestions": ["What are the museum hours?", "What accessibility services are there?"]
+  },
+  "accessibility": {
+    "answer": "A care partner accompanying a visitor with a disability gets in **free**, and visitors with disabilities pay the discounted $22 rate. Service animals are welcome but must be leashed and attended at all times. For wheelchairs, assistive listening, and other services, see the Accessibility section of MoMA's visit pages.",
+    "source": "https://www.moma.org/visit/",
+    "source_title": "Plan your visit, moma.org",
+    "checked": "November 21, 2026",
+    "suggestions": ["How much is admission?", "What are the museum hours?"]
+  },
+  "address": {
+    "answer": "MoMA is at **11 West 53 Street, New York, NY 10019**. The main entrance is on 53rd Street near Sixth Avenue.",
+    "source": "https://www.moma.org/visit/",
+    "source_title": "Plan your visit, moma.org",
+    "checked": "November 21, 2026",
+    "suggestions": ["What are the museum hours?", "What's on floor 5?"]
+  }
+}

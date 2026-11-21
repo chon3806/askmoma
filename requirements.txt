@@ -1,0 +1,17 @@
+# Core (enough to run the app with TF-IDF search and templated answers)
+gradio>=5.0,<6.0
+pandas>=2.0
+numpy>=1.24
+scikit-learn>=1.3
+
+# Better search-by-description (proposal: all-MiniLM-L6-v2 + FAISS)
+sentence-transformers>=2.7
+faiss-cpu>=1.8
+
+# Optional small LLM to reword answers (set ASKMOMA_LLM to enable)
+# transformers>=4.44
+# torch
+# accelerate
+
+# Tests
+pytest>=8

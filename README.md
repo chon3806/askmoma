@@ -1,82 +1,130 @@
 # AskMoMA
 
-A conversational guide to the art on view at the Museum of Modern Art (MoMA): where a work is, which related works to see next, and answers to common visitor questions. Every answer links to the museum's own page so that visitors can verify it.
+A conversational guide to the art on view at The Museum of Modern Art.
+Group 4, MSAI-631-M80, University of the Cumberlands.
 
-Group 4 project for MSAI-631-M80, *Artificial Intelligence for Human-Computer Interaction*, University of the Cumberlands, Fall 2026.
+Ask in plain English, for example *"Where is The Starry Night?"*,
+*"Who painted Water Lilies?"* or *"I loved The Starry Night. What else should I see?"*,
+and AskMoMA answers from MoMA's own collection data, with a link back to
+moma.org and the date of the data.
 
-**Team:** Dipu Biswas, Heman Chongbang Limbu, Sarina Tamang, Soham Nitin Ghorpade, Xinran Peng
-
-## Status
-
-| Use case | Example | Status |
-| --- | --- | --- |
-| 1. Locate a work | *Where is The Starry Night?* → MoMA, Floor 5, Gallery 501, with a link to the moma.org page | **Working** |
-| 2. Rank the artists on view, for the museum or one floor | *Who are the top artists on Floor 5?* | To do |
-| 3. Recommend related works (same gallery, artist, or period) | *I loved The Starry Night* | To do |
-| 4. Search by description (sentence embeddings) | *dreamy night-sky paintings* | To do |
-| Visitor FAQ (hours, admission, accessibility), written from moma.org with source links | *What time does MoMA open?* | To do |
-
-The model and the detailed design are being researched as the project goes; see [docs/design-notes.md](docs/design-notes.md).
-
-## Getting started
-
-The toolchain is pinned with [mise](https://mise.jdx.dev) (Python 3.12 and [uv](https://docs.astral.sh/uv/)), and the libraries are locked in `uv.lock`, so everyone runs the same versions.
+## 1. Setup
 
 ```bash
-mise install        # Python 3.12 and uv
-mise run setup      # install AskMoMA and the dev tools into .venv
-mise run app        # start the chat page, then open the address it prints
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-| Task | What it does |
+## 2. Get the data
+
+The data is MoMA's public collection dataset
+(<https://github.com/MuseumofModernArt/collection>, CC0). Put `Artworks.csv`
+and `Artists.csv` in a `data/` folder next to `app.py`.
+
+The CSVs are large and stored with Git LFS, so either:
+
+```bash
+# Option A: clone with Git LFS
+git lfs install
+git clone https://github.com/MuseumofModernArt/collection.git
+mkdir -p data && cp collection/Artworks.csv collection/Artists.csv data/
+
+# Option B: download just the two files
+mkdir -p data
+curl -L -o data/Artworks.csv https://media.githubusercontent.com/media/MuseumofModernArt/collection/main/Artworks.csv
+curl -L -o data/Artists.csv  https://media.githubusercontent.com/media/MuseumofModernArt/collection/main/Artists.csv
+```
+
+If a file is only a few hundred bytes, you downloaded the LFS pointer, not
+the data; use the other option.
+
+Set the date you pulled the data so answers say how current they are:
+
+```bash
+export ASKMOMA_DATA_AS_OF="November 20, 2026"
+```
+
+## 3. Run
+
+```bash
+python app.py                 # web UI at http://127.0.0.1:7860
+python app.py --cli           # chat in the terminal
+python app.py --share         # temporary public link (e.g. for the demo)
+python app.py --data tests/fixtures   # tiny fictional test data
+```
+
+The first run with `sentence-transformers` installed downloads
+all-MiniLM-L6-v2 (~90 MB) and caches embeddings in `.cache/`.
+
+## 4. What it can answer
+
+| Scenario | Example |
 | --- | --- |
-| `mise run setup` | Install the project and dev tools from `uv.lock` |
-| `mise run app` | Start the chat page |
-| `mise run test` | Run the tests |
-| `mise run lint` | Check style and common errors (ruff) |
-| `mise run fmt` | Fix formatting |
-| `mise run check` | Lint and test, the same as CI |
-| `mise run data` | Re-download MoMA's data and rebuild `data/on_view.csv` |
+| Locate a work | Where is The Starry Night? / Is Water Lilies on view? |
+| Who made it | Who painted The Starry Night? |
+| Work details | When was it made? / What medium is it? / How big is it? |
+| Acquisition | When did MoMA acquire Les Demoiselles d'Avignon? |
+| Works by an artist | What works by Frida Kahlo are on view? / Show me paintings by Picasso |
+| About an artist | Who was Piet Mondrian? |
+| Recommendations | I loved The Starry Night. What else should I see? |
+| Rank artists | Which artists have the most works on floor 5? |
+| What's on a floor / gallery | What's on floor 4? / What's in gallery 501? |
+| By nationality | Which Japanese artists are on view? |
+| Search by description | Find dreamy night sky paintings |
+| Follow-ups | Where is it? / What else did they make? |
+| Same title, many works | Tell me about Untitled → asks which one |
+| Visitor FAQ | Hours, admission, accessibility, address |
+| No answer | Says so and links to moma.org |
 
-**Without mise**, install [uv](https://docs.astral.sh/uv/getting-started/installation/) and use the same commands directly: `uv sync`, `uv run python -m askmoma`, `uv run pytest`, `uv run ruff check .`.
+Typos are tolerated ("starry nite", "Piccaso").
 
-## Project structure
+## 5. Options (environment variables)
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `ASKMOMA_DATA_DIR` | `./data` | Folder with the CSVs |
+| `ASKMOMA_DATA_AS_OF` | CSV file date | Date shown with every answer |
+| `ASKMOMA_SEARCH_SCOPE` | `on_view` | `all` to search the whole collection |
+| `ASKMOMA_EMBED_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model |
+| `ASKMOMA_LLM` | empty (off) | e.g. `Qwen/Qwen2.5-1.5B-Instruct` or `HuggingFaceTB/SmolLM2-360M-Instruct` |
+
+## 6. Project layout
 
 ```
-askmoma/
-├── mise.toml                  toolchain pin and tasks
-├── pyproject.toml             package metadata, dependencies, pytest and ruff settings
-├── uv.lock                    exact library versions
-├── src/askmoma/
-│   ├── config.py              paths and constants
-│   ├── data/
-│   │   ├── fetch.py           downloads MoMA's data, builds data/on_view.csv
-│   │   └── collection.py      loads the works on view; title lookup
-│   ├── features/              one module per use case
-│   │   └── locate.py          use case 1: where is a work?
-│   ├── chat/router.py         decides which feature answers a message
-│   └── ui/app.py              the Gradio chat page
-├── data/
-│   ├── on_view.csv            the 1,556 works on view (committed)
-│   ├── SOURCE.md              which version of MoMA's data, downloaded when
-│   └── raw/                   full Artworks.csv and Artists.csv (not committed)
-├── docs/design-notes.md       open questions and decisions, with sources
-├── tests/                     pytest
-└── .github/workflows/ci.yml   lint and tests on every push and pull request
+app.py               Gradio UI + terminal mode
+askmoma/config.py    settings
+askmoma/data.py      load CSVs, parse OnView into floor/gallery, build indexes
+askmoma/nlu.py       intent rules + finding the artwork/artist in a message
+askmoma/engine.py    one handler per scenario, builds grounded answers
+askmoma/search.py    embeddings + FAISS (or TF-IDF) for description search
+askmoma/llm.py       optional small LLM that rewords answers
+askmoma/faq.json     visitor FAQ with sources and dates
+tests/               fictional fixture + scenario tests (pytest)
 ```
 
-**Adding a use case:** create a module in `src/askmoma/features/` that takes the `Collection` and the message and returns an `Answer`, add a route for it in `src/askmoma/chat/router.py`, and add tests in `tests/`.
+## 7. Tests
 
-## Working together
+```bash
+python -m pytest tests -q
+```
 
-- Create a branch for each piece of work, such as `feature/rank-artists`, and open a pull request into `main`.
-- CI runs the lint and tests on every pull request; another member reviews and merges.
-- Run `mise run check` before pushing.
-- Record design decisions, with their sources, in `docs/design-notes.md`.
-- Never commit API keys or passwords; none are needed.
+The fixture in `tests/fixtures/` is fictional (made-up artists and titles
+with MoMA's column layout) so tests run without the real data.
 
-## Data and credits
+## 8. Known limitations
 
-- **Collection data:** The Museum of Modern Art (MoMA) collection data, https://github.com/MuseumofModernArt/collection, CC0 1.0. `mise run data` downloads both files, `Artworks.csv` and `Artists.csv`. Only the works listed as on view are committed, in `data/on_view.csv`. The Kaggle dataset `momanyc/museum-collection` contains the same two files but was last updated in February 2017, so its gallery locations are out of date; we use MoMA's official repository instead.
-- **Interface:** Gradio (Abid et al., 2019).
-- AskMoMA is an independent course project. It is not affiliated with or endorsed by The Museum of Modern Art.
+- The repo does not document the `OnView` format. `data.py` reads
+  "Floor N" and a 3-digit gallery number and otherwise shows the raw text.
+  Check a few answers against moma.org after loading real data.
+- The data is a snapshot; gallery moves after the pull won't show until you
+  refresh the CSVs.
+- FAQ answers were copied from moma.org/visit on November 21, 2026. Re-check
+  them before a demo.
+
+## Credits
+
+- Collection data: The Museum of Modern Art, CC0.
+- Gradio (Abid et al., 2019), sentence-transformers (Reimers & Gurevych, 2019),
+  FAISS, scikit-learn, pandas.
+- Student project, not affiliated with MoMA.

@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [project.scripts]
-askmoma = "askmoma.ui.app:main"
+askmoma = "askmoma.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -31,7 +31,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/askmoma"]
+packages = ["askmoma"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
