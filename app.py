@@ -275,8 +275,32 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .hero-wide {min-height:340px; padding:56px 48px; display:flex; flex-direction:column; justify-content:flex-end; color:#ffffff;}
 .hero-wide h1 {font-weight:900; text-transform:uppercase; font-size:clamp(2.4rem, 6vw, 4.8rem); line-height:.95; letter-spacing:-.02em; color:#ffffff; margin:0;}
 .hero-wide p {color:#e4e4e7; font-size:1.1rem; margin:12px 0 0; max-width:60ch;}
-#main {position:fixed !important; right:24px; bottom:100px; width:min(420px, calc(100vw - 48px)) !important; height:min(620px, 72vh) !important; z-index:1000; background:#ffffff; border-radius:20px; box-shadow:0 24px 60px -20px rgba(0,0,0,.45); border:1px solid #e4e4e7; overflow:auto; padding:14px !important;}
+#chatpanel {position:fixed !important; right:24px; bottom:100px; width:min(420px, calc(100vw - 48px)) !important; height:min(620px, 72vh) !important; z-index:1000; background:#ffffff; border-radius:20px; box-shadow:0 24px 60px -20px rgba(0,0,0,.45); border:1px solid #e4e4e7; overflow:auto; padding:14px !important;}
 #chat-launch {position:fixed !important; right:24px; bottom:24px; width:60px !important; min-width:60px !important; height:60px !important; border-radius:999px !important; z-index:1001; background:#0b0b0c !important; color:#ffffff !important; font-weight:700; box-shadow:0 12px 30px -10px rgba(0,0,0,.6); padding:0 !important;}
+
+/* ---- body, floor cards, popup tabs and home ---- */
+#body {max-width:1180px; margin:0 auto; padding:40px 40px 80px;}
+.stats {display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px;}
+.stat {background:#ffffff; border:1px solid #e4e4e7; border-radius:18px; padding:22px 24px;}
+.stat b {display:block; font-size:2.2rem; font-weight:800; color:#0b0b0c; letter-spacing:-.02em;}
+.stat span {color:#52525b; font-size:.95rem;}
+.about {margin-top:36px;}
+.about h2 {font-weight:800; font-size:1.9rem; letter-spacing:-.01em; color:#0b0b0c; margin:0 0 12px;}
+.about h3 {font-weight:700; font-size:1.2rem; margin:24px 0 8px; color:#0b0b0c;}
+.about p, .about li {color:#3f3f46; font-size:1.05rem; line-height:1.6; max-width:70ch;}
+.about a {color:#0b0b0c; font-weight:600;}
+#floors {gap:14px !important; flex-wrap:wrap;}
+.floor-card {flex:1 1 170px !important; min-height:104px !important; border-radius:18px !important; background:#ffffff !important; border:1px solid #e4e4e7 !important; color:#0b0b0c !important; font-weight:700 !important; white-space:pre-line !important; text-align:left !important; justify-content:flex-start !important; padding:18px !important;}
+.floor-card:hover {border-color:#0b0b0c !important; box-shadow:0 14px 28px -20px rgba(0,0,0,.5) !important;}
+.home-card {background:#0b0b0c; color:#ffffff; border-radius:18px; padding:22px 22px 20px; margin-bottom:12px;}
+.home-card h2 {color:#ffffff; font-weight:800; font-size:1.5rem; margin:4px 0 6px;}
+.home-card p {color:#d4d4d8; margin:0;}
+.home-card .kicker {font-family:ui-monospace, Menlo, monospace; text-transform:uppercase; letter-spacing:.12em; font-size:.72rem; color:#a1a1aa; margin:0;}
+.home-link {display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border:1px solid #e4e4e7; border-radius:14px; color:#0b0b0c; font-weight:700; text-decoration:none; margin-bottom:12px;}
+.home-link:hover {border-color:#0b0b0c;}
+#send-btn {width:100%; margin-bottom:18px;}
+.starter {justify-content:flex-start !important; text-align:left !important;}
+#chattabs {min-height:0;}
 
 """
 
@@ -473,6 +497,50 @@ def hero_html() -> str:
     )
 
 
+def about_html(col) -> str:
+    on = col.works[col.works["on_view"]]
+    artists = on.explode("cids")["cids"].dropna().nunique()
+    stats = [
+        (f"{len(on):,}", "works on view"),
+        (f"{artists:,}", "artists"),
+        (f"{len(col.floors())}", "floors"),
+    ]
+    cards = "".join(f"<div class='stat'><b>{n}</b><span>{label}</span></div>" for n, label in stats)
+    return (
+        f"<div class='stats'>{cards}</div>"
+        "<section class='about'>"
+        "<h2>About the collection</h2>"
+        "<p>The Museum of Modern Art in New York collects painting, sculpture, photography, architecture, "
+        "design, and more, from the late 1800s to today. This guide uses MoMA's public collection data to show "
+        "what is on view, who made it, and where to find it.</p>"
+        "<h3>How to explore</h3>"
+        "<ol><li>Pick a floor below to see what is on view there.</li>"
+        "<li>Ask about an artist, an artwork, or a recommendation.</li>"
+        "<li>Open the work or artist on moma.org to read more.</li></ol>"
+        "<p><a href='https://www.moma.org/visit' target='_blank' rel='noopener'>Plan your visit on moma.org</a> "
+        "for current hours, admission, and accessibility.</p>"
+        "</section>"
+    )
+
+
+def home_html() -> str:
+    return (
+        "<div class='home-card'><p class='kicker'>Hi there</p>"
+        "<h2>How can we help?</h2>"
+        "<p>Ask about any work on view, an artist, or your visit.</p></div>"
+        "<a class='home-link' href='https://www.moma.org' target='_blank' rel='noopener'>"
+        "Visit moma.org <span>&rarr;</span></a>"
+    )
+
+
+def footer_html(col) -> str:
+    return (
+        "<div class='sidefoot'>Collection data from MoMA's public "
+        "<a href='https://github.com/MuseumofModernArt/collection' target='_blank' rel='noopener'>GitHub dataset</a> "
+        f"(CC0), {_e(col.as_of)}. Student project for MSAI-631. Not affiliated with MoMA.</div>"
+    )
+
+
 def build_ui(bot):
     import gradio as gr
 
@@ -543,77 +611,79 @@ def build_ui(bot):
         open_state = gr.State(False)
         gr.HTML(header_html())
         gr.HTML(hero_html())
-        with gr.Row(elem_id="shell", equal_height=True):
-            with gr.Column(scale=0, min_width=272, elem_id="side"):
-                gr.HTML(
-                    "<div class='brand'><div class='logo'>A</div><div><div class='name'>AskMoMA</div>"
-                    "<div class='sub'>Museum guide</div></div></div>"
-                )
-                new_chat = gr.Button("New conversation", elem_id="newchat")
-                gr.HTML("<p class='sec'>Browse by floor</p>")
+        with gr.Column(elem_id="body"):
+            gr.HTML(about_html(col))
+            gr.HTML("<p class='sec'>Browse by floor</p>")
+            with gr.Row(elem_id="floors"):
                 floor_btns = [
                     gr.Button(
-                        f"Floor {f}  ({int(counts.get(f, 0)):,} work{'' if counts.get(f, 0) == 1 else 's'})",
+                        f"Floor {f}\n{int(counts.get(f, 0)):,} works",
                         variant="secondary",
+                        elem_classes=["floor-card"],
                     )
                     for f in floors
                 ]
-                gr.HTML("<p class='sec'>Popular questions</p>")
-                starter_btns = [
-                    gr.Button(q) for q in STARTERS + ["What are the museum hours?", "How much is admission?"]
-                ]
-                gr.HTML(
-                    f"<div class='sidefoot'>Collection data from MoMA's public "
-                    f"<a href='https://github.com/MuseumofModernArt/collection' target='_blank' rel='noopener'>GitHub dataset</a> "
-                    f"(CC0), {_e(col.as_of)}.<br>Student project for MSAI-631. Not affiliated with MoMA.</div>"
-                )
-            with gr.Column(scale=1, elem_id="main", visible=False) as main:
-                gr.HTML(topbar_html(col))
-                thread = gr.HTML(thread_html([]))
-                with gr.Column(elem_id="composer"):
-                    with gr.Row(elem_id="chips"):
-                        chips = [gr.Button(visible=False, size="sm") for _ in range(N_CHIPS)]
-                    msg = gr.Textbox(
-                        elem_id="ask",
-                        placeholder="Ask about an artwork, an artist, or your visit",
-                        show_label=False,
-                        container=False,
-                        autofocus=True,
-                        submit_btn="Send",
-                        lines=1,
-                        max_lines=4,
-                    )
-                    gr.HTML(
-                        "<p class='fine'>Gallery locations can change. Check the moma.org link before you go.</p>"
-                    )
-                with gr.Row(elem_id="opts"):
-                    on_view_only = gr.Checkbox(
-                        value=True, label="Only list works that are on view", container=False
-                    )
-
+            gr.HTML(footer_html(col))
+        with gr.Column(elem_id="chatpanel", visible=False) as panel:
+            with gr.Tabs(selected="home", elem_id="chattabs") as tabs:
+                with gr.Tab("Home", id="home"):
+                    gr.HTML(home_html())
+                    send_btn = gr.Button("Send us a message", elem_id="send-btn", variant="primary")
+                    gr.HTML("<p class='sec'>Popular questions</p>")
+                    starter_btns = [
+                        gr.Button(q, elem_classes=["starter"])
+                        for q in STARTERS + ["What are the museum hours?", "How much is admission?"]
+                    ]
+                with gr.Tab("Messages", id="messages"):
+                    new_chat = gr.Button("New conversation", elem_id="newchat", size="sm")
+                    thread = gr.HTML(thread_html([]))
+                    with gr.Column(elem_id="composer"):
+                        with gr.Row(elem_id="chips"):
+                            chips = [gr.Button(visible=False, size="sm") for _ in range(N_CHIPS)]
+                        msg = gr.Textbox(
+                            elem_id="ask",
+                            placeholder="Ask about an artwork, an artist, or your visit",
+                            show_label=False,
+                            container=False,
+                            autofocus=True,
+                            submit_btn="Send",
+                            lines=1,
+                            max_lines=4,
+                        )
+                        gr.HTML(
+                            "<p class='fine'>Gallery locations can change. Check the moma.org link before you go.</p>"
+                        )
+                    with gr.Row(elem_id="opts"):
+                        on_view_only = gr.Checkbox(
+                            value=True, label="Only list works that are on view", container=False
+                        )
         launch = gr.Button("Ask", elem_id="chat-launch")
 
         def toggle(is_open):
             return (not is_open), gr.update(visible=not is_open)
 
-        def show_chat():
-            return gr.update(visible=True)
+        def open_messages():
+            return gr.update(visible=True), gr.update(selected="messages")
 
-        launch.click(toggle, [open_state], [open_state, main], queue=False)
+        def go_messages():
+            return gr.update(selected="messages")
+
+        launch.click(toggle, [open_state], [open_state, panel], queue=False)
+        send_btn.click(go_messages, None, tabs, queue=False)
 
         outs = [thread, hist, ctx, *chips, *floor_btns]
         run = dict(fn=answer, inputs=[hist, ctx, on_view_only], outputs=outs)
-        msg.submit(add_user, [msg, hist], [msg, hist, thread], queue=False).then(show_chat, None, main).then(
-            **run
-        )
-        for b in chips + starter_btns:
-            b.click(add_user, [b, hist], [msg, hist, thread], queue=False).then(show_chat, None, main).then(
-                **run
-            )
+        msg.submit(add_user, [msg, hist], [msg, hist, thread], queue=False).then(**run)
+        for b in chips:
+            b.click(add_user, [b, hist], [msg, hist, thread], queue=False).then(**run)
+        for b in starter_btns:
+            b.click(add_user, [b, hist], [msg, hist, thread], queue=False).then(
+                open_messages, None, [panel, tabs], queue=False
+            ).then(**run)
         for f, b in zip(floors, floor_btns, strict=True):
             b.click(
                 functools.partial(add_user, f"What's on floor {f}?"), [hist], [msg, hist, thread], queue=False
-            ).then(show_chat, None, main).then(**run)
+            ).then(open_messages, None, [panel, tabs], queue=False).then(**run)
         new_chat.click(reset, None, outs)
     demo.askmoma_launch_kwargs = style if gradio6 else {}
     return demo
