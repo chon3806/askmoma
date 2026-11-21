@@ -85,7 +85,7 @@ class AskMoMA:
         return None, pool[: config.MAX_LIST]
 
     def _disambiguate(self, rows: list[int]) -> Answer:
-        lines = "\n".join(f"{i}. {self._work_line(r)}" for i, r in enumerate(rows, 1))
+        lines = "\n".join(f"{i}. {self._work_line(r)}" for i, r in enumerate(rows[: config.CHAT_LIST], 1))
         first = self._card(rows[0])
         return Answer(
             text=f"I found several works called **{first['title']}**. Which one do you mean?\n\n{lines}",
@@ -278,8 +278,6 @@ class AskMoMA:
             parts = [f"**{c['title']}**, {c['artist']}, {c['date']}"]
             for label, val in [
                 ("Medium", c["medium"]),
-                ("Dimensions", _clean(w["Dimensions"])),
-                ("Department", _clean(w["Department"])),
                 ("Acquired", _clean(w["DateAcquired"])),
                 ("Where", c["location"] if c["on_view"] else "Not currently on view"),
             ]:
@@ -405,13 +403,17 @@ class AskMoMA:
                 suggestions=[f"Tell me about {name}"],
                 context={"artist_cid": cid},
             )
-        lines = "\n".join(f"- {self._work_line(r)}" for r in df.index[: config.MAX_LIST])
-        more = f"\n\n…and {len(df) - config.MAX_LIST} more." if len(df) > config.MAX_LIST else ""
+        lines = "\n".join(f"- {self._work_line(r)}" for r in df.index[: config.CHAT_LIST])
+        more = (
+            f"\n\n…and {len(df) - config.CHAT_LIST} more on [moma.org]({config.ARTIST_URL.format(constituent_id=cid)})."
+            if len(df) > config.CHAT_LIST
+            else ""
+        )
         scope = "on view" if on_view_only else "in the collection"
         return Answer(
             text=f"**{name}** — {len(df)} work{'s' if len(df) != 1 else ''} {scope}:\n\n{lines}{more}"
             + self._as_of(),
-            cards=[self._card(r) for r in df.index[: config.MAX_LIST]],
+            cards=[self._card(r) for r in df.index[: config.CHAT_LIST]],
             suggestions=[f"Tell me about {name}", f"Where is {self._card(df.index[0])['title']}?"],
             context={"artist_cid": cid, "work_row": int(df.index[0])},
         )
@@ -475,7 +477,7 @@ class AskMoMA:
         lines = "\n".join(f"- {self._artist_name(c)} — {n} on view" for c, n in counts.items())
         return Answer(
             text=f"**{nat}** artists with work on view ({len(counts)} shown):\n\n{lines}" + self._as_of(),
-            cards=[self._card(r) for r in df.index[: config.MAX_LIST]],
+            cards=[self._card(r) for r in df.index[: config.CHAT_LIST]],
             suggestions=[f"Tell me about {self._artist_name(counts.index[0])}"],
         )
 
@@ -511,7 +513,7 @@ class AskMoMA:
         return Answer(
             text=f"**{len(df)}** works are on view on {scope}. A few of them:\n\n{lines}{gal}"
             + self._as_of(),
-            cards=[self._card(r) for r in df.index[: config.MAX_LIST]],
+            cards=[self._card(r) for r in df.index[: config.CHAT_LIST]],
             suggestions=[f"Which artists have the most work on floor {int(df['floor'].iloc[0])}?"],
         )
 

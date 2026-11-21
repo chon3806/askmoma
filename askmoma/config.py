@@ -39,3 +39,4 @@ TOP_ARTISTS = 5
 ARTIST_URL = "https://www.moma.org/artists/{constituent_id}"
 
 MAX_LIST = 8  # rows shown in list-style answers
+CHAT_LIST = 5  # rows shown in a chat reply; the rest link to moma.org
