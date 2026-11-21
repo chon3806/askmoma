@@ -46,3 +46,7 @@ run = ["uv run ruff format .", "uv run ruff check --fix ."]
 [tasks.check]
 description = "Everything CI runs: lint, then tests"
 depends = ["lint", "test"]
+
+[tasks.eval]
+description = "Check 20 answers against moma.org and time them (evaluation/evaluate.py)"
+run = "uv run python -m evaluation.evaluate"

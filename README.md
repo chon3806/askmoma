@@ -123,6 +123,7 @@ askmoma/search.py    embeddings + FAISS (or TF-IDF) for description search
 askmoma/llm.py       optional small LLM that rewords answers
 askmoma/faq.json     visitor FAQ with sources and dates
 tests/               fictional fixture + scenario tests (pytest)
+evaluation/          20-question check against moma.org, with timing (mise run eval)
 ```
 
 ## 7. Tests
@@ -139,7 +140,34 @@ LLM layer's checks. Tests that need an optional extra are marked `embeddings` or
 The fixture in `tests/fixtures/` is fictional (made-up artists and titles
 with MoMA's column layout) so tests run without the real data.
 
-## 8. Known limitations
+## 8. Evaluation
+
+`evaluation/evaluate.py` carries out the design document's evaluation plan. It
+asks the 20 questions in `evaluation/questions.json` about well-known works
+(including typos and two works not on view), then opens the moma.org page each
+answer links to and checks that:
+
+- the answer is about the work the question names,
+- the link opens that same work on moma.org, and
+- the floor and gallery (or "not on view") match what moma.org says today.
+
+It also times every answer, and with `--llm MODEL` the time the optional LLM
+adds. The report goes to `evaluation/results/<date>.md` (and `.csv`).
+
+```bash
+mise run eval                                    # or: uv run python -m evaluation.evaluate
+uv run python -m evaluation.evaluate --llm HuggingFaceTB/SmolLM2-360M-Instruct
+uv run python -m evaluation.evaluate --pages saved/   # pages saved from a browser
+```
+
+moma.org's robots.txt allows these pages, and the script fetches at most one
+per second. If moma.org refuses the request (it has answered HTTP 403 to the
+script), the script stops asking and marks those checks "not checked"; it does
+not try to get around the refusal. Then open each work's page in a browser,
+save it as `<ObjectID>.html` (the number at the end of its URL) in one folder,
+and run with `--pages` that folder.
+
+## 9. Known limitations
 
 - The repo does not document the `OnView` format. `data.py` reads
   "Floor N" and a 3-digit gallery number and otherwise shows the raw text.
