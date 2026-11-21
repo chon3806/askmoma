@@ -18,6 +18,16 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+Or, with [mise](https://mise.jdx.dev) and uv, which install the exact versions in `uv.lock`:
+
+```bash
+mise install          # Python 3.12 and uv
+mise run setup        # core install: TF-IDF search, starts fast
+mise run setup-full   # adds embedding search (sentence-transformers, FAISS, CPU-only PyTorch)
+```
+
+Without mise, `uv sync --extra embeddings` does the same as `setup-full`.
+
 ## 2. Get the data
 
 The data is MoMA's public collection dataset
@@ -49,8 +59,12 @@ python app.py --share         # temporary public link (e.g. for the demo)
 python app.py --data tests/fixtures   # tiny fictional test data
 ```
 
-The first run with `sentence-transformers` installed downloads
-all-MiniLM-L6-v2 (~90 MB) and caches embeddings in `.cache/`.
+With the `embeddings` extra installed, search by description uses
+all-MiniLM-L6-v2 sentence embeddings and a FAISS index, so "chairs and furniture
+design" finds chairs even when no title contains those words. The first run
+downloads the model (~90 MB) and encodes the works on view (about a minute on a
+laptop); later runs load the vectors from `.cache/` in about a second. Without
+the extra, search falls back to TF-IDF keyword matching.
 
 ## 4. What it can answer
 
@@ -81,6 +95,7 @@ Typos are tolerated ("starry nite", "Piccaso").
 | `ASKMOMA_DATA_DIR` | `./data` | Folder with the CSVs |
 | `ASKMOMA_DATA_AS_OF` | CSV file date | Date shown with every answer |
 | `ASKMOMA_SEARCH_SCOPE` | `on_view` | `all` to search the whole collection |
+| `ASKMOMA_SEARCH_BACKEND` | `auto` | `auto` (embeddings if installed, else TF-IDF), `embeddings` (fail if unavailable), or `tfidf` |
 | `ASKMOMA_EMBED_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model |
 | `ASKMOMA_LLM` | empty (off) | e.g. `Qwen/Qwen2.5-1.5B-Instruct` or `HuggingFaceTB/SmolLM2-360M-Instruct` |
 
@@ -107,6 +122,10 @@ tests/               fictional fixture + scenario tests (pytest)
 ```bash
 python -m pytest tests -q
 ```
+
+`tests/test_search.py` covers both search backends. Its embedding tests are
+marked `embeddings` and are skipped unless the extra is installed; skip them
+on purpose with `pytest -m "not embeddings"`.
 
 The fixture in `tests/fixtures/` is fictional (made-up artists and titles
 with MoMA's column layout) so tests run without the real data.

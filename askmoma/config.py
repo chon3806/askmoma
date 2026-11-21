@@ -16,6 +16,10 @@ DATA_AS_OF = os.environ.get("ASKMOMA_DATA_AS_OF", "")
 # Which works semantic search covers: "on_view" (fast, default) or "all".
 SEARCH_SCOPE = os.environ.get("ASKMOMA_SEARCH_SCOPE", "on_view")
 
+# Search backend: "auto" (embeddings if installed, else TF-IDF), "embeddings"
+# (fail loudly if they cannot load), or "tfidf" (keyword search only).
+SEARCH_BACKEND = os.environ.get("ASKMOMA_SEARCH_BACKEND", "auto")
+
 # Embedding model for search-by-description (falls back to TF-IDF if missing).
 EMBED_MODEL = os.environ.get("ASKMOMA_EMBED_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 

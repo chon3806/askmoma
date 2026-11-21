@@ -18,8 +18,29 @@ dependencies = [
     "gradio>=6.32,<7",
 ]
 
+[project.optional-dependencies]
+# Search by description with sentence embeddings (all-MiniLM-L6-v2) and FAISS.
+# Without this extra, search.py falls back to TF-IDF. Install with
+# `uv sync --extra embeddings` (or `mise run setup-full`).
+embeddings = [
+    "sentence-transformers>=3.0",
+    "faiss-cpu>=1.8",
+    "torch>=2.4",
+]
+
 [project.scripts]
 askmoma = "askmoma.__main__:main"
+
+# PyTorch's CPU-only wheels: a laptop needs no GPU for MiniLM, and they are a
+# fraction of the size of the default CUDA build. macOS wheels on PyPI are
+# already CPU builds, so it keeps PyPI there.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform != 'darwin'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [dependency-groups]
 dev = [
@@ -38,6 +59,9 @@ packages = ["askmoma"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+    "embeddings: needs the `embeddings` extra and the MiniLM model (skipped when not installed)",
+]
 
 [tool.ruff]
 line-length = 110
