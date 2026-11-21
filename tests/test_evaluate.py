@@ -122,3 +122,11 @@ def test_question_set_is_well_formed():
     for q in questions:
         assert set(q) == {"id", "scenario", "question", "title", "artist"}
         assert all(isinstance(v, str) and v for v in q.values())
+
+
+def test_page_record_saved_from_a_browser_is_used(tmp_path):
+    record = {"name": "Ana Lind. The Quiet Harbor at Night. 1921", "artists": ["Ana Lind"],
+              "status": "on view", "location": "MoMA, Floor 5, 501"}  # fmt: skip
+    (tmp_path / "90001.json").write_text(json.dumps(record), encoding="utf-8")
+    page = ev.MomaPages(tmp_path, offline=True).page("https://www.moma.org/collection/works/90001")
+    assert page == ev.WorkPage(record["name"], ["Ana Lind"], "on view", "MoMA, Floor 5, 501")

@@ -1,0 +1,21 @@
+id,scenario,question,expected,answered,askmoma_location,moma_location,right_work,link_ok,location_ok,seconds,llm_seconds,llm_rewrite_used,note,passed
+q01,location,Where is The Starry Night?,The Starry Night (Vincent van Gogh),The Starry Night (Vincent van Gogh),"Floor 5, Gallery 501","MoMA, Floor 5, 501",True,True,True,0.02189859999998589,,,,True
+q02,location,Where can I see Les Demoiselles d'Avignon?,Les Demoiselles d'Avignon (Pablo Picasso),Les Demoiselles d'Avignon (Pablo Picasso),"Floor 5, Gallery 502","MoMA, Floor 5, 502",True,True,True,0.008486399998218985,,,,True
+q03,location,Which floor is The Persistence of Memory on?,The Persistence of Memory (Salvador Dalí),The Persistence of Memory (Salvador Dalí),"Floor 5, Gallery 517","MoMA, Floor 5, 517",True,True,True,0.0075127000018255785,,,,True
+q04,location,Where is Water Lilies?,Water Lilies (Claude Monet),Water Lilies (Claude Monet),"Floor 5, Gallery 515","MoMA, Floor 5, 515",True,True,True,0.005230900002061389,,,,True
+q05,location,Is The Sleeping Gypsy on view?,The Sleeping Gypsy (Henri Rousseau),The Sleeping Gypsy (Henri Rousseau),"Floor 5, Gallery 501","MoMA, Floor 5, 501",True,True,True,0.006824699998105643,,,,True
+q06,location,Where is Gold Marilyn Monroe?,Gold Marilyn Monroe (Andy Warhol),Gold Marilyn Monroe (Andy Warhol),"Floor 4, Gallery 420","MoMA, Floor 4, 420",True,True,True,0.008083600001555169,,,,True
+q07,location,Where are Campbell's Soup Cans?,Campbell's Soup Cans (Andy Warhol),Campbell's Soup Cans (Andy Warhol),"Floor 4, Gallery 412","MoMA, Floor 4, 412",True,True,True,0.010474899998371257,,,,True
+q08,location,Where is Christina's World?,Christina's World (Andrew Wyeth),Christina's World (Andrew Wyeth),"Floor 5, Gallery 521","MoMA, Floor 5, 521",True,True,True,0.006945999997697072,,,,True
+q09,who_made,Who painted Self-Portrait with Cropped Hair?,Self-Portrait with Cropped Hair (Frida Kahlo),Self-Portrait with Cropped Hair (Frida Kahlo),"Floor 5, Gallery 513","MoMA, Floor 5, 513",True,True,True,0.010965800000121817,,,,True
+q10,location,Where is Dance (I) by Matisse?,Dance (I) (Henri Matisse),Dance (I) (Henri Matisse),"Floor 5, Gallery 506","MoMA, Floor 5, 506",True,True,True,0.006874799997603986,,,,True
+q11,location,Where is The Moon by Tarsila do Amaral?,The Moon (Tarsila do Amaral),The Moon (Tarsila do Amaral),"Floor 5, Gallery 509","MoMA, Floor 5, 509",True,True,True,0.0067388999996182974,,,,True
+q12,location,Where is Flag by Jasper Johns?,Flag (Jasper Johns),Flag (Jasper Johns),"Floor 4, Gallery 408","MoMA, Floor 4, 408",True,True,True,0.004077899997355416,,,,True
+q13,location,Where is The Red Studio?,The Red Studio (Henri Matisse),The Red Studio (Henri Matisse),"Floor 5, Gallery 506","MoMA, Floor 5, 506",True,True,True,0.015995699999621138,,,,True
+q14,location,Where is Vir Heroicus Sublimis?,Vir Heroicus Sublimis (Barnett Newman),Vir Heroicus Sublimis (Barnett Newman),"Floor 4, Gallery 402","MoMA, Floor 4, 402",True,True,True,0.004284399998141453,,,,True
+q15,who_made,Who painted Girl before a Mirror?,Girl before a Mirror (Pablo Picasso),Girl before a Mirror (Pablo Picasso),"Floor 5, Gallery 517","MoMA, Floor 5, 517",True,True,True,0.006091499999456573,,,,True
+q16,location,Where is House by the Railroad?,House by the Railroad (Edward Hopper),House by the Railroad (Edward Hopper),"Floor 5, Gallery 521","MoMA, Floor 5, 521",True,True,True,0.004921600000670878,,,,True
+q17,typo,where is I and the Villege,I and the Village (Marc Chagall),I and the Village (Marc Chagall),"Floor 5, Gallery 503","MoMA, Floor 5, 503",True,True,True,0.028354999998555286,,,,True
+q18,typo,where is the birth of the wrld,The Birth of the World (Joan Miró),The Birth of the World (Joan Miró),"Floor 5, Gallery 517","MoMA, Floor 5, 517",True,True,True,0.007462300000042887,,,,True
+q19,not_on_view,Is Broadway Boogie Woogie on view?,Broadway Boogie Woogie (Piet Mondrian),Broadway Boogie Woogie (Piet Mondrian),not on view,not on view,True,True,True,0.005888200001209043,,,,True
+q20,not_on_view,"Where is One: Number 31, 1950?","One: Number 31, 1950 (Jackson Pollock)","One: Number 31, 1950 (Jackson Pollock)",not on view,not on view,True,True,True,0.005594700000074226,,,,True

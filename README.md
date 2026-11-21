@@ -157,15 +157,18 @@ adds. The report goes to `evaluation/results/<date>.md` (and `.csv`).
 ```bash
 mise run eval                                    # or: uv run python -m evaluation.evaluate
 uv run python -m evaluation.evaluate --llm HuggingFaceTB/SmolLM2-360M-Instruct
-uv run python -m evaluation.evaluate --pages saved/   # pages saved from a browser
+uv run python -m evaluation.evaluate --pages evaluation/moma_pages/2026-11-21   # pages read in a browser
 ```
 
 moma.org's robots.txt allows these pages, and the script fetches at most one
 per second. If moma.org refuses the request (it has answered HTTP 403 to the
 script), the script stops asking and marks those checks "not checked"; it does
-not try to get around the refusal. Then open each work's page in a browser,
-save it as `<ObjectID>.html` (the number at the end of its URL) in one folder,
-and run with `--pages` that folder.
+not try to get around the refusal. Instead, open each work's page in a
+browser and either save it as `<ObjectID>.html` (the number at the end of its
+URL) or record what it says in `<ObjectID>.json` (`name`, `artists`, `status`,
+`location`), all in one folder, and run with `--pages` that folder.
+`evaluation/moma_pages/2026-11-21/` holds the 20 records read in Chrome on
+November 21, 2026, and `evaluation/results/` the reports from that day.
 
 ## 9. Known limitations
 

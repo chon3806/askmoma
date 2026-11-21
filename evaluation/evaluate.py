@@ -154,6 +154,15 @@ class MomaPages:
         self.fetched = 0
         self.refused: urllib.error.HTTPError | None = None  # once refused, stop asking
 
+    def page(self, url: str) -> WorkPage:
+        """What the work page says: from a record saved from a browser
+        (<ObjectID>.json with name, artists, status, location) or from the HTML."""
+        record = self.cache_dir / f"{url.rsplit('/', 1)[-1]}.json"
+        if record.exists():
+            data = json.loads(record.read_text(encoding="utf-8"))
+            return WorkPage(data["name"], list(data["artists"]), data["status"], data.get("location", ""))
+        return parse_work_page(self.get(url))
+
     def get(self, url: str) -> str:
         path = self.cache_dir / f"{url.rsplit('/', 1)[-1]}.html"
         if path.exists() and not self.refresh:
@@ -245,7 +254,7 @@ def evaluate_question(bot: AskMoMA, q: dict, pages: MomaPages, use_llm: bool) ->
         r.note = f"link is not a moma.org work page: {card['link']}"
         return r
     try:
-        page = parse_work_page(pages.get(url))
+        page = pages.page(url)
     except urllib.error.HTTPError as exc:
         r.note = (
             f"not checked: moma.org answered HTTP {exc.code}; save the page from a browser and use --pages"
@@ -343,7 +352,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--questions", type=Path, default=QUESTIONS)
     ap.add_argument("--llm", metavar="MODEL", help="also time the optional LLM layer with this model")
     ap.add_argument("--offline", action="store_true", help="use only moma.org pages saved by an earlier run")
-    ap.add_argument("--pages", type=Path, help="folder of work pages saved from a browser as <ObjectID>.html")
+    ap.add_argument(
+        "--pages", type=Path, help="folder of work pages read in a browser: <ObjectID>.html or .json"
+    )
     ap.add_argument("--refresh", action="store_true", help="fetch moma.org pages again even if saved")
     ap.add_argument(
         "--out", type=Path, help="report path without extension (default: evaluation/results/<date>)"
@@ -386,7 +397,11 @@ def main(argv: list[str] | None = None) -> int:
         "LLM": args.llm or "off",
         "startup (load data, build search)": f"{startup:.1f} s",
         "LLM load": f"{llm_load:.1f} s" if llm_load is not None else "n/a",
-        "moma.org pages fetched this run": f"{pages.fetched} (others reused from .cache/moma_pages)",
+        "moma.org pages": (
+            f"read from {args.pages.as_posix()}"
+            if args.pages
+            else f"{pages.fetched} fetched this run, others reused from .cache/moma_pages"
+        ),
         "machine": f"{platform.system()} {platform.release()}, {os.cpu_count()} CPU threads, "
         f"Python {platform.python_version()}",
     }
