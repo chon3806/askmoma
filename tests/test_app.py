@@ -55,3 +55,11 @@ def test_conversation_is_a_live_region_and_escapes_the_question():
 def test_empty_conversation_shows_the_greeting():
     html = app.thread_html([])
     assert "I'm AskMoMA" in html and "role='log'" in html
+
+
+def test_chat_window_can_be_resized_by_mouse_and_keyboard():
+    head = app.CHAT_RESIZE_HEAD
+    assert "chat-grip" in head and "pointerdown" in head  # drag
+    assert "ArrowLeft" in head and "dblclick" in head  # keyboard, and reset
+    assert "Resize the chat window" in head and "Make the chat window larger" in head  # labelled controls
+    assert ".chat-size-bar" in app.CSS

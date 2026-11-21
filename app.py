@@ -344,6 +344,100 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .avatar {background:#0b0b0c !important; color:#ffffff !important;}
 .status span {color:#d4d4d8 !important;}
 .fine {color:#5b6470 !important;}
+
+/* ---- resizable chat window: grip at the top-left corner, plus an expand button ---- */
+.chat-size-bar {position:sticky; top:-14px; height:0; z-index:20; margin:0 !important;}
+.chat-size-bar button {position:absolute; top:-8px; width:28px; height:28px; border-radius:8px; border:1px solid #d4d4d8;
+  background:#ffffff; color:#0b0b0c; font:600 14px/1 system-ui, sans-serif; display:flex; align-items:center;
+  justify-content:center; padding:0; cursor:pointer; box-shadow:0 2px 6px -2px rgba(0,0,0,.25);}
+.chat-size-bar .chat-grip {left:-8px; cursor:nwse-resize; touch-action:none;}
+.chat-size-bar .chat-expand {left:24px;}
+.chat-size-bar button:hover {background:#f4f4f5;}
+.chat-size-bar button:focus-visible {outline:2px solid #0b0b0c; outline-offset:2px;}
+body.chat-resizing, body.chat-resizing * {cursor:nwse-resize !important; user-select:none !important;}
+"""
+
+# The chat window sits at the bottom right, so it grows up and to the left: a grip
+# at its top-left corner can be dragged (or moved with the arrow keys), and a
+# button switches between the normal and a large size. The size is kept for the
+# visit in localStorage when the browser allows it. Gradio shows the window only
+# after "Ask" is pressed, so the controls are added whenever it appears.
+CHAT_RESIZE_HEAD = """
+<script>
+(() => {
+  const KEY = "askmoma-chat-size", MIN_W = 320, MIN_H = 360, STEP = 40;
+  const limits = () => ({w: window.innerWidth - 48, h: window.innerHeight - 124});
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } };
+  const save = (s) => { try { s ? localStorage.setItem(KEY, JSON.stringify(s)) : localStorage.removeItem(KEY); } catch (e) {} };
+
+  function apply(panel, size) {
+    const expand = panel.querySelector(".chat-expand");
+    if (!size) {
+      panel.style.removeProperty("width"); panel.style.removeProperty("height");
+    } else {
+      const lim = limits();
+      panel.style.setProperty("width", clamp(size.w, MIN_W, lim.w) + "px", "important");
+      panel.style.setProperty("height", clamp(size.h, MIN_H, lim.h) + "px", "important");
+    }
+    if (expand) {
+      const big = !!size && !!size.big;  // set by the button, so it works on small screens too
+      expand.textContent = big ? "\\u2921" : "\\u2922";
+      expand.setAttribute("aria-label", big ? "Make the chat window smaller" : "Make the chat window larger");
+      expand.title = expand.getAttribute("aria-label");
+    }
+  }
+
+  function setup(panel) {
+    if (panel.querySelector(".chat-size-bar")) return;
+    const bar = document.createElement("div");
+    bar.className = "chat-size-bar";
+    bar.innerHTML =
+      '<button type="button" class="chat-grip" aria-label="Resize the chat window: drag, or use the arrow keys" ' +
+      'title="Drag to resize (double-click to reset)">\\u21F1</button>' +
+      '<button type="button" class="chat-expand"></button>';
+    panel.prepend(bar);
+    const grip = bar.querySelector(".chat-grip"), expand = bar.querySelector(".chat-expand");
+    const current = () => { const r = panel.getBoundingClientRect(); return {w: r.width, h: r.height}; };
+    apply(panel, load());
+
+    grip.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      const start = {x: e.clientX, y: e.clientY, ...current()};
+      grip.setPointerCapture(e.pointerId);
+      document.body.classList.add("chat-resizing");
+      const move = (ev) => apply(panel, {w: start.w + start.x - ev.clientX, h: start.h + start.y - ev.clientY});
+      const up = () => {
+        grip.removeEventListener("pointermove", move);
+        document.body.classList.remove("chat-resizing");
+        save(current());
+      };
+      grip.addEventListener("pointermove", move);
+      grip.addEventListener("pointerup", up, {once: true});
+      grip.addEventListener("pointercancel", up, {once: true});
+    });
+    grip.addEventListener("keydown", (e) => {
+      const d = {ArrowLeft: [STEP, 0], ArrowRight: [-STEP, 0], ArrowUp: [0, STEP], ArrowDown: [0, -STEP]}[e.key];
+      if (!d) return;
+      e.preventDefault();
+      const s = current();
+      apply(panel, {w: s.w + d[0], h: s.h + d[1]});
+      save(current());
+    });
+    grip.addEventListener("dblclick", () => { apply(panel, null); save(null); });
+    expand.addEventListener("click", () => {
+      const big = !!(load() || {}).big;
+      const size = big ? null : {w: 760, h: window.innerHeight - 124, big: true};
+      apply(panel, size); save(size);
+    });
+  }
+
+  const scan = () => { const p = document.getElementById("chatpanel"); if (p) setup(p); };
+  new MutationObserver(scan).observe(document.documentElement, {childList: true, subtree: true});
+  window.addEventListener("resize", () => { const p = document.getElementById("chatpanel"); if (p) apply(p, load()); });
+  scan();
+})();
+</script>
 """
 
 
@@ -688,7 +782,7 @@ def build_ui(bot):
 
     # Gradio 6 moved theme and css from Blocks() to launch().
     gradio6 = int(gr.__version__.split(".")[0]) >= 6
-    style = {"theme": theme, "css": CSS}
+    style = {"theme": theme, "css": CSS, "head": CHAT_RESIZE_HEAD}
     with gr.Blocks(title="AskMoMA", fill_width=True, **({} if gradio6 else style)) as demo:
         hist = gr.State([])
         ctx = gr.State({})
