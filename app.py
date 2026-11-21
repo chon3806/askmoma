@@ -327,6 +327,13 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .chat-sub {font-size:.8rem; color:#71717a;}
 #chat-close {min-width:36px !important; max-width:36px !important; height:36px !important; padding:0 !important; border-radius:999px !important; background:#0b0b0c !important; color:#ffffff !important; font-size:1rem !important; font-weight:700 !important; border:none !important; box-shadow:0 6px 14px -8px rgba(0,0,0,.6);}
 #chat-close:hover {background:#27272a !important;}
+.pop-banner {margin:0 -14px 14px !important; padding:120px 20px 18px; min-height:170px; color:#ffffff; display:flex; flex-direction:column; justify-content:flex-end; gap:4px; border-bottom:1px solid #e4e4e7;}
+.pop-title {font-family:"Instrument Serif", Georgia, serif; font-size:2rem; line-height:1.05; letter-spacing:-.01em;}
+.pop-sub {font-size:.88rem; opacity:.9;}
+.pop-credit, .pop-credit * {color:rgba(255,255,255,.85) !important; font-size:.7rem !important; text-decoration:underline;}
+#chatnav {position:sticky !important; bottom:-14px; margin:14px -14px -14px !important; padding:8px 10px !important; gap:8px !important; background:#ffffff; border-top:1px solid #e4e4e7; z-index:2;}
+#chatnav button {flex:1 1 0 !important; border-radius:12px !important; font-weight:600 !important; min-height:42px;}
+
 
 """
 
@@ -555,6 +562,22 @@ def about_html(col) -> str:
     )
 
 
+def popup_banner_html() -> str:
+    """Painting banner at the top of the chat popup, with the AskMoMA name over it."""
+    credit = ""
+    if _featured:
+        credit = (
+            f"<a class='credit pop-credit' href='{_e(_featured[0]['link'])}' target='_blank' rel='noopener'>"
+            f"Image: {_e(_featured[0]['title'])}, MoMA &#8599;</a>"
+        )
+    return (
+        f"<div class='pop-banner' style=\"{_bg_style()}\">"
+        "<div class='pop-title'>Welcome to AskMoMA</div>"
+        "<div class='pop-sub'>Ask about the art on view, or pick a floor.</div>"
+        f"{credit}</div>"
+    )
+
+
 def home_html() -> str:
     return (
         "<div class='home-card'><p class='kicker'>Hi there</p>"
@@ -677,38 +700,39 @@ def build_ui(bot):
                     "<div class='chat-sub'>Museum guide for works on view</div></div>"
                 )
                 close_btn = gr.Button("✕", elem_id="chat-close", size="sm")
-            with gr.Tabs(selected="home", elem_id="chattabs") as tabs:
-                with gr.Tab("Home", id="home"):
-                    gr.HTML(home_html())
-                    send_btn = gr.Button("Send us a message", elem_id="send-btn", variant="primary")
-                    gr.HTML("<p class='sec'>Popular questions</p>")
-                    starter_btns = [
-                        gr.Button(q, elem_classes=["starter"])
-                        for q in STARTERS + ["What are the museum hours?", "How much is admission?"]
-                    ]
-                with gr.Tab("Messages", id="messages"):
-                    new_chat = gr.Button("New conversation", elem_id="newchat", size="sm")
-                    thread = gr.HTML(thread_html([]))
-                    with gr.Column(elem_id="composer"):
-                        with gr.Row(elem_id="chips"):
-                            chips = [gr.Button(visible=False, size="sm") for _ in range(N_CHIPS)]
-                        msg = gr.Textbox(
-                            elem_id="ask",
-                            placeholder="Ask about an artwork, an artist, or your visit",
-                            show_label=False,
-                            container=False,
-                            autofocus=True,
-                            submit_btn="Send",
-                            lines=1,
-                            max_lines=4,
-                        )
-                        gr.HTML(
-                            "<p class='fine'>Gallery locations can change. Check the moma.org link before you go.</p>"
-                        )
-                    with gr.Row(elem_id="opts"):
-                        on_view_only = gr.Checkbox(
-                            value=True, label="Only list works that are on view", container=False
-                        )
+            gr.HTML(popup_banner_html())
+            with gr.Column(visible=True, elem_id="pane-home") as pane_home:
+                gr.HTML(home_html())
+                send_btn = gr.Button("Send us a message", elem_id="send-btn", variant="primary")
+                gr.HTML("<p class='sec'>Popular questions</p>")
+                starter_btns = [
+                    gr.Button(q, elem_classes=["starter"])
+                    for q in STARTERS + ["What are the museum hours?", "How much is admission?"]
+                ]
+            with gr.Column(visible=False, elem_id="pane-messages") as pane_msgs:
+                new_chat = gr.Button("New conversation", elem_id="newchat", size="sm")
+                thread = gr.HTML(thread_html([]))
+                with gr.Column(elem_id="composer"):
+                    with gr.Row(elem_id="chips"):
+                        chips = [gr.Button(visible=False, size="sm") for _ in range(N_CHIPS)]
+                    msg = gr.Textbox(
+                        elem_id="ask",
+                        placeholder="Ask about an artwork, an artist, or your visit",
+                        show_label=False,
+                        container=False,
+                        autofocus=True,
+                        submit_btn="Send",
+                        lines=1,
+                        max_lines=4,
+                    )
+                    gr.HTML(
+                        "<p class='fine'>Gallery locations can change. Check the moma.org link before you go.</p>"
+                    )
+                with gr.Row(elem_id="opts"):
+                    on_view_only = gr.Checkbox(value=True, label="Only list works that are on view", container=False)
+            with gr.Row(elem_id="chatnav"):
+                nav_home = gr.Button("Home", elem_id="nav-home", variant="primary")
+                nav_msgs = gr.Button("Messages", elem_id="nav-messages", variant="secondary")
         launch = gr.Button("Ask", elem_id="chat-launch")
 
         def toggle(is_open):
@@ -717,15 +741,25 @@ def build_ui(bot):
         def close_chat():
             return False, gr.update(visible=False)
 
-        def open_messages():
-            return gr.update(visible=True), gr.update(selected="messages")
+        pane_outs = [pane_home, pane_msgs, nav_home, nav_msgs]
 
-        def go_messages():
-            return gr.update(selected="messages")
+        def show(tab):
+            home = tab == "home"
+            return (
+                gr.update(visible=home),
+                gr.update(visible=not home),
+                gr.update(variant="primary" if home else "secondary"),
+                gr.update(variant="primary" if not home else "secondary"),
+            )
+
+        def open_messages():
+            return (gr.update(visible=True), *show("messages"))
 
         launch.click(toggle, [open_state], [open_state, panel], queue=False)
         close_btn.click(close_chat, None, [open_state, panel], queue=False)
-        send_btn.click(go_messages, None, tabs, queue=False)
+        send_btn.click(lambda: show("messages"), None, pane_outs, queue=False)
+        nav_home.click(lambda: show("home"), None, pane_outs, queue=False)
+        nav_msgs.click(lambda: show("messages"), None, pane_outs, queue=False)
 
         outs = [thread, hist, ctx, *chips, *floor_btns]
         run = dict(fn=answer, inputs=[hist, ctx, on_view_only], outputs=outs)
@@ -734,12 +768,12 @@ def build_ui(bot):
             b.click(add_user, [b, hist], [msg, hist, thread], queue=False).then(**run)
         for b in starter_btns:
             b.click(add_user, [b, hist], [msg, hist, thread], queue=False).then(
-                open_messages, None, [panel, tabs], queue=False
+                open_messages, None, [panel, *pane_outs], queue=False
             ).then(**run)
         for f, b in zip(floors, floor_btns, strict=True):
             b.click(
                 functools.partial(add_user, f"What's on floor {f}?"), [hist], [msg, hist, thread], queue=False
-            ).then(open_messages, None, [panel, tabs], queue=False).then(**run)
+            ).then(open_messages, None, [panel, *pane_outs], queue=False).then(**run)
         new_chat.click(reset, None, outs)
     demo.askmoma_launch_kwargs = style if gradio6 else {}
     return demo
