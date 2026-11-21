@@ -396,7 +396,7 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 @media (max-width: 760px) {.facts {grid-template-columns:1fr;}}
 #chat-launch.secondary {background:#ffffff !important; color:#0b0b0c !important; border:1px solid #d4d4d8 !important; width:auto !important; min-width:0 !important; padding:0 20px !important; border-radius:999px !important;}
 /* ---- footer: dark, to mark the end of the page ---- */
-.ft {margin-top:64px; background:#0b0b0c; color:#a1a1aa; border-radius:24px 24px 0 0; padding:48px 40px 0; width:100%; box-sizing:border-box;}
+.ft {margin-top:64px; background:#0b0b0c !important; color:#a1a1aa !important; border-radius:24px 24px 0 0; padding:48px 40px 0; width:100%; box-sizing:border-box;}
 .ft-grid {display:grid; grid-template-columns:1.4fr 1fr 1fr 1.2fr; gap:36px; padding-bottom:36px; border-bottom:1px solid #27272a;}
 .ft h4 {font-family:ui-monospace, Menlo, monospace; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:#71717a; margin:0 0 12px; font-weight:500;}
 .ft ul {list-style:none; padding:0; margin:0;}
@@ -724,7 +724,7 @@ def home_html() -> str:
 def footer_html(col) -> str:
     link = "<a href='{u}' target='_blank' rel='noopener'>{t} &#8599;</a>"
     return (
-        "<footer class='ft'><div class='ft-grid'>"
+        "<div class='ft'><div class='ft-grid'>"
         "<div class='ft-brand'><div class='ft-logo'>AskMoMA</div>"
         "<p>A guide to the works on view at The Museum of Modern Art, built from MoMA's public collection data.</p>"
         "<p class='ft-note'>A student project for MSAI-631 at the University of the Cumberlands. "
@@ -750,16 +750,20 @@ def footer_html(col) -> str:
             ]
         )
         + "</ul></div>"
-        "<div><h4>Credits</h4><ul>"
-        f"<li>Artwork and artist data: MoMA, CC0 (as of {_e(col.as_of)}).</li>"
-        "<li>Images: moma.org, credited under each picture.</li>"
+        "<div><h4>References</h4><ul>"
+        "<li>Artwork and artist data: MoMA public collection, CC0, "
+        "<a href='https://github.com/MuseumofModernArt/collection' target='_blank' rel='noopener'>GitHub dataset</a>"
+        f" (as of {_e(col.as_of)}).</li>"
+        "<li>Images and work pages: <a href='https://www.moma.org' target='_blank' rel='noopener'>moma.org</a>, "
+        "credited under each picture.</li>"
         "<li>Built with Gradio, pandas and scikit-learn.</li>"
-        "<li>Fonts: Inter and Instrument Serif.</li>"
+        "<li>Fonts: <a href='https://fonts.google.com' target='_blank' rel='noopener'>Inter and Instrument Serif</a> "
+        "(Google Fonts).</li>"
         "</ul></div>"
         "</div>"
         "<div class='ft-bar'><span>&copy; 2026 AskMoMA student project</span>"
         "<a href='https://github.com/chon3806/askmoma' target='_blank' rel='noopener'>Source code on GitHub &#8599;</a>"
-        "</div></footer>"
+        "</div></div>"
     )
 
 
