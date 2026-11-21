@@ -320,6 +320,14 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 #chat-close {min-width:36px !important; max-width:36px !important; height:36px !important; padding:0 !important; border-radius:999px !important; background:#f4f4f5 !important; color:#0b0b0c !important; font-weight:700 !important; border:1px solid #e4e4e7 !important;}
 #chat-close:hover {background:#e4e4e7 !important;}
 
+/* ---- chat popup header: clear title and a solid close button ---- */
+#chat-head {display:flex !important; justify-content:space-between; align-items:center; gap:12px; margin:-14px -14px 10px !important; padding:14px 16px !important; border-bottom:1px solid #e4e4e7; background:#ffffff; border-radius:20px 20px 0 0;}
+.chat-head-text {display:flex; flex-direction:column;}
+.chat-title {font-weight:800; font-size:1.1rem; color:#0b0b0c; letter-spacing:-.01em;}
+.chat-sub {font-size:.8rem; color:#71717a;}
+#chat-close {min-width:36px !important; max-width:36px !important; height:36px !important; padding:0 !important; border-radius:999px !important; background:#0b0b0c !important; color:#ffffff !important; font-size:1rem !important; font-weight:700 !important; border:none !important; box-shadow:0 6px 14px -8px rgba(0,0,0,.6);}
+#chat-close:hover {background:#27272a !important;}
+
 """
 
 
@@ -664,7 +672,10 @@ def build_ui(bot):
             gr.HTML(footer_html(col))
         with gr.Column(elem_id="chatpanel", visible=False) as panel:
             with gr.Row(elem_id="chat-head"):
-                gr.HTML("<span class='chat-title'>AskMoMA</span>")
+                gr.HTML(
+                    "<div class='chat-head-text'><div class='chat-title'>AskMoMA</div>"
+                    "<div class='chat-sub'>Museum guide for works on view</div></div>"
+                )
                 close_btn = gr.Button("✕", elem_id="chat-close", size="sm")
             with gr.Tabs(selected="home", elem_id="chattabs") as tabs:
                 with gr.Tab("Home", id="home"):
