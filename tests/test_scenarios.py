@@ -92,7 +92,7 @@ def test_top_five_then_artist_link():
     chips = [c for c in a.suggestions if c.startswith("MoMA link for")]
     assert 1 <= len(chips) <= 5
     link = ask(chips[0])
-    assert "https://www.moma.org/search/?q=" in link.text
+    assert "https://www.moma.org/artists/" in link.text and "To know more" in link.text
     assert "works on view on floor 5" in link.text or "on floor 5" in link.text
 
 

@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import pandas as pd
 
 from . import config
-from .data import Collection
+from .data import Collection, norm
 from .nlu import Parsed, parse
 from .search import Searcher
 
@@ -415,17 +416,25 @@ class AskMoMA:
             context={"artist_cid": cid, "work_row": int(df.index[0])},
         )
 
+    def _artist_url(self, name: str) -> str:
+        """MoMA's artist page (/artists/{id}-{slug}), or a MoMA search if the ID is unknown."""
+        cid = self.col.artist_index.get(norm(name))
+        if not cid:
+            return config.ARTIST_SEARCH_URL.format(query=name.replace(" ", "+"))
+        ascii_name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+        slug = re.sub(r"[^a-z0-9]+", "-", ascii_name.lower()).strip("-")
+        return config.ARTIST_PAGE_URL.format(cid=cid, slug=slug)
+
     def _artist_link(self, name: str, floor: int | None) -> Answer:
         works = self.col.on_view
         df = works[works["Artist"].str.contains(name, regex=False, na=False)]
         if floor:
             df = df[df["floor"] == floor]
-        query = name.replace(" ", "+")
-        link = config.ARTIST_SEARCH_URL.format(query=query)
         where = f" on floor {floor}" if floor else " on view"
         count = f"**{name}** has {len(df)} work{'s' if len(df) != 1 else ''}{where}."
+        link = self._artist_url(name)
         return Answer(
-            text=f"{count}\n\nMoMA artist page: [Search MoMA for {name}]({link})" + self._as_of(),
+            text=f"{count}\n\nTo know more about this artist, visit [{name}]({link})." + self._as_of(),
             suggestions=[f"Which artists have the most work on floor {floor}?"] if floor else [],
         )
 
