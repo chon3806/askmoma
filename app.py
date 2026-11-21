@@ -507,8 +507,10 @@ def thread_html(history: list) -> str:
             "made, and what to see next.</p>"
             "<p>Try one of the questions below, or pick a floor on the page.</p></div></div></div>"
         )
-        return ("<div class='thread' role='log' aria-live='polite' aria-label='Conversation with AskMoMA'>"
-                f"<div class='inner'>{greeting}</div></div>")
+        return (
+            "<div class='thread' role='log' aria-live='polite' aria-label='Conversation with AskMoMA'>"
+            f"<div class='inner'>{greeting}</div></div>"
+        )
     rows = []
     for q, a, cards in history:
         rows.append(f"<div class='row-u'><div class='bubble'>{_e(q)}</div></div>")
@@ -744,7 +746,9 @@ def build_ui(bot):
                         "<p class='fine'>Gallery locations can change. Check the moma.org link before you go.</p>"
                     )
                 with gr.Row(elem_id="opts"):
-                    on_view_only = gr.Checkbox(value=True, label="Only list works that are on view", container=False)
+                    on_view_only = gr.Checkbox(
+                        value=True, label="Only list works that are on view", container=False
+                    )
             with gr.Row(elem_id="chatnav"):
                 nav_home = gr.Button("Home", elem_id="nav-home", variant="primary")
                 nav_msgs = gr.Button("Messages", elem_id="nav-messages", variant="secondary")
