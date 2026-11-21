@@ -7,13 +7,15 @@ source on moma.org and says how current the data is.
 from __future__ import annotations
 
 import json
+import re
+import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 
 import pandas as pd
 
 from . import config
-from .data import Collection
+from .data import Collection, norm
 from .nlu import DESCRIPTIVE, Parsed, parse
 from .search import Searcher
 
@@ -112,6 +114,9 @@ class AskMoMA:
         message = (message or "").strip()
         if not message:
             return Answer(text="Ask me about an artwork, an artist, or your visit.")
+        link = re.match(r"^MoMA link for (.+?)(?: on floor (\d+))?$", message)
+        if link:
+            return self._artist_link(link.group(1), int(link.group(2)) if link.group(2) else None)
         p = parse(self.col, message, context)
         handler = getattr(self, f"_h_{p.intent}", None)
         work_intents = {
@@ -411,10 +416,32 @@ class AskMoMA:
             context={"artist_cid": cid, "work_row": int(df.index[0])},
         )
 
+    def _artist_url(self, name: str) -> str:
+        """MoMA's artist page (/artists/{id}-{slug}), or a MoMA search if the ID is unknown."""
+        cid = self.col.artist_index.get(norm(name))
+        if not cid:
+            return config.ARTIST_SEARCH_URL.format(query=name.replace(" ", "+"))
+        ascii_name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode()
+        slug = re.sub(r"[^a-z0-9]+", "-", ascii_name.lower()).strip("-")
+        return config.ARTIST_PAGE_URL.format(cid=cid, slug=slug)
+
+    def _artist_link(self, name: str, floor: int | None) -> Answer:
+        works = self.col.on_view
+        df = works[works["Artist"].str.contains(name, regex=False, na=False)]
+        if floor:
+            df = df[df["floor"] == floor]
+        where = f" on floor {floor}" if floor else " on view"
+        count = f"**{name}** has {len(df)} work{'s' if len(df) != 1 else ''}{where}."
+        link = self._artist_url(name)
+        return Answer(
+            text=f"{count}\n\nTo know more about this artist, visit [{name}]({link})." + self._as_of(),
+            suggestions=[f"Which artists have the most work on floor {floor}?"] if floor else [],
+        )
+
     def _h_top_artists(self, p, floor_filter=None, **_):
         floor = p.floor or floor_filter
         df = self._filter(self.col.works, floor, True)
-        counts = df.explode("cids")["cids"].dropna().value_counts().head(10)
+        counts = df.explode("cids")["cids"].dropna().value_counts().head(config.TOP_ARTISTS)
         if counts.empty:
             return Answer(
                 text="I couldn't find any works listed as on view"
@@ -426,15 +453,12 @@ class AskMoMA:
             f"{i}. {self._artist_name(cid)} — {n} work{'s' if n != 1 else ''}"
             for i, (cid, n) in enumerate(counts.items(), 1)
         )
-        top = self._artist_name(counts.index[0])
         return Answer(
             text=f"Artists with the most works on view {scope}:\n\n{lines}" + self._as_of(),
-            suggestions=[f"What works by {top} are on view?"]
-            + (
-                [f"Which artists have the most work on floor {f}?" for f in self.col.floors() if f != floor][
-                    :2
-                ]
-            ),
+            suggestions=[
+                f"MoMA link for {self._artist_name(cid)}" + (f" on floor {floor}" if floor else "")
+                for cid in counts.index
+            ],
             context={"artist_cid": counts.index[0]},
         )
 
@@ -477,11 +501,18 @@ class AskMoMA:
         gal = ""
         if p.floor and len(galleries):
             gal = "\n\nGalleries on this floor: " + ", ".join(sorted(galleries.index))
+        if p.floor:
+            n_artists = df.explode("cids")["cids"].dropna().nunique()
+            return Answer(
+                text=f"Floor {p.floor}: **{len(df)}** works by **{n_artists}** artists.\n\n"
+                "Search an artist, or see the top 5?" + self._as_of(),
+                suggestions=[f"Which artists have the most work on floor {p.floor}?"],
+            )
         return Answer(
             text=f"**{len(df)}** works are on view on {scope}. A few of them:\n\n{lines}{gal}"
             + self._as_of(),
             cards=[self._card(r) for r in df.index[: config.MAX_LIST]],
-            suggestions=[f"Which artists have the most work on floor {p.floor or int(df['floor'].iloc[0])}?"],
+            suggestions=[f"Which artists have the most work on floor {int(df['floor'].iloc[0])}?"],
         )
 
     # ------------------------------------------------------------ search

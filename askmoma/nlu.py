@@ -54,7 +54,9 @@ INTENT_RULES: list[tuple[str, re.Pattern]] = [
     (
         "top_artists",
         re.compile(
-            r"\b(most|top|rank\w*|biggest|leading)\b.*\bartists?\b|\bartists?\b.*\b(most works|most pieces)\b"
+            r"\b(most|top|rank\w*|biggest|leading)\b.*\bartists?\b"
+            r"|\bartists?\b.*\b(most|top|biggest|leading)\b"
+            r"|\bmost (works?|pieces?)\b.*\bfloor\b"
         ),
     ),
     (

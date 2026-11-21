@@ -33,6 +33,9 @@ CACHE_DIR = Path(os.environ.get("ASKMOMA_CACHE_DIR", ROOT / ".cache"))
 MOMA_HOME = "https://www.moma.org"
 MOMA_VISIT = "https://www.moma.org/visit/"
 WORK_URL = "https://www.moma.org/collection/works/{object_id}"
+ARTIST_PAGE_URL = "https://www.moma.org/artists/{cid}-{slug}"
+ARTIST_SEARCH_URL = "https://www.moma.org/search/?q={query}"
+TOP_ARTISTS = 5
 ARTIST_URL = "https://www.moma.org/artists/{constituent_id}"
 
 MAX_LIST = 8  # rows shown in list-style answers
