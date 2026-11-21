@@ -81,6 +81,12 @@ def test_floor_summary_counts_then_offers_next_steps():
     assert "top 5 artists" in a
 
 
+def test_singular_most_work_question_gives_top_artists():
+    a = ask("Which artists have the most work on floor 4?")
+    assert "works on view by" not in a.text
+    assert len([c for c in a.suggestions if c.startswith("MoMA link for")]) >= 1
+
+
 def test_top_five_then_artist_link():
     a = ask("Which artists have the most works on floor 5?")
     chips = [c for c in a.suggestions if c.startswith("MoMA link for")]
