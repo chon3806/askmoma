@@ -52,7 +52,7 @@ def main() -> None:
 
     # Top row: the conversation path.
     box(ax, 0.1, 3.75, 1.4, 0.9, "Visitor")
-    box(ax, 2.1, 3.5, 2.5, 1.35, "app.py", "Gradio web page:\nanswer cards, suggestion\nchips, floor buttons\n(also a terminal mode)", "ui")  # fmt: skip
+    box(ax, 2.1, 3.5, 2.5, 1.35, "app.py", "Gradio web page: featured\nMoMA paintings, answer cards,\nsuggestion chips, floor buttons\n(also a terminal mode)", "ui")  # fmt: skip
     box(ax, 5.3, 3.5, 2.6, 1.35, "engine.py  (AskMoMA)", "one handler per scenario;\ncarries context to the next\nturn for follow-ups", "logic")  # fmt: skip
     box(ax, 8.6, 3.5, 2.3, 1.35, "nlu.py", "rule-based intents; finds\nthe title or artist named,\ntolerating typos", "logic")  # fmt: skip
     arrow(ax, (1.5, 4.4), (2.1, 4.4), "question")
