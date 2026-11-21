@@ -24,6 +24,12 @@ for noisy in ("httpx", "urllib3", "huggingface_hub", "sentence_transformers"):
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", message=".*Gradio 6.0.*")
 
+EXPLORE = [
+    "Where is The Starry Night?",
+    "What works by Frida Kahlo are on view?",
+    "Which artists have the most works on floor 5?",
+    "What are the museum hours?",
+]
 STARTERS = [
     "Where is The Starry Night?",
     "What works by Frida Kahlo are on view?",
@@ -379,6 +385,22 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 #chatpanel #opts {padding:0 !important; margin:2px 0 4px !important; max-width:none !important;}
 #chatpanel #newchat {align-self:flex-end; margin:0 0 4px !important;}
 #chatnav {margin:0 !important; border-radius:0 0 20px 20px !important; padding:10px 12px !important;}
+#explore {gap:12px !important; flex-wrap:wrap !important;}
+.ask-card {flex:1 1 220px !important; min-height:84px !important; border-radius:18px !important; background:#ffffff !important;
+  border:1px solid #e4e4e7 !important; color:#0b0b0c !important; font-weight:600 !important; text-align:left !important;
+  justify-content:flex-start !important; padding:18px !important; white-space:normal !important; line-height:1.35 !important;}
+.ask-card:hover {border-color:#0b0b0c !important; box-shadow:0 14px 28px -20px rgba(0,0,0,.5) !important;}
+.facts {display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px; margin-top:20px;}
+.fact {background:#ffffff; border:1px solid #e4e4e7; border-radius:18px; padding:20px 22px;}
+.fact .yr, .visit .yr {font-family:ui-monospace, Menlo, monospace; font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; color:#71717a; margin-bottom:6px;}
+.fact h3 {font-size:1.05rem; font-weight:700; margin:0 0 6px; color:#0b0b0c;}
+.fact p {margin:0; color:#3f3f46; font-size:.95rem; line-height:1.55;}
+.visit {margin-top:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; background:#0b0b0c; color:#e4e4e7; border-radius:18px; padding:22px 24px; font-size:.98rem; line-height:1.5;}
+.visit b {color:#ffffff;}
+.visit a {color:#ffffff; font-weight:700; text-decoration:none; border:1px solid #52525b; border-radius:999px; padding:10px 18px;}
+.visit a:hover {background:#ffffff; color:#0b0b0c;}
+@media (max-width: 760px) {.facts {grid-template-columns:1fr;}}
+#chat-launch.secondary {background:#ffffff !important; color:#0b0b0c !important; border:1px solid #d4d4d8 !important; width:auto !important; min-width:0 !important; padding:0 20px !important; border-radius:999px !important;}
 @media (max-width: 600px) {
   #chatpanel {left:10px !important; right:10px !important; width:auto !important; bottom:86px !important; height:76vh !important;}
   #chat-launch {right:16px !important; bottom:16px !important;}
@@ -620,11 +642,42 @@ def about_html(col) -> str:
         (f"{len(col.floors())}", "floors"),
     ]
     cards = "".join(f"<div class='stat'><b>{n}</b><span>{label}</span></div>" for n, label in stats)
+    facts = [
+        (
+            "1929",
+            "Opened in New York",
+            "The museum opened on November 7, 1929, with Alfred H. Barr, Jr. as its first director. "
+            "Abby Aldrich Rockefeller, Lillie P. Bliss and Mary Quinn Sullivan were among its founders.",
+        ),
+        (
+            "1941",
+            "The Starry Night arrives",
+            "Van Gogh's The Starry Night was acquired through the Lillie P. Bliss Bequest. "
+            "It was the first van Gogh to enter a New York museum's collection.",
+        ),
+        (
+            "~200,000",
+            "Works in the collection",
+            "Paintings, sculptures, drawings, prints, photographs, media, architecture and design. "
+            "The collection began with a gift of eight prints and one drawing.",
+        ),
+    ]
+    fact_cards = "".join(
+        f"<div class='fact'><div class='yr'>{y}</div><h3>{_e(t)}</h3><p>{_e(d)}</p></div>"
+        for y, t, d in facts
+    )
     return (
         f"<div class='stats'>{cards}</div>"
-        "<section class='about'><h2>About the collection</h2>"
-        "<p>MoMA's collection covers painting, sculpture, photography, architecture, design and more. "
-        "Pick a floor below, or ask a question in the chat.</p></section>"
+        "<section class='about'><h2>About MoMA</h2>"
+        "<p>The Museum of Modern Art connects people from around the world to the art of our time. "
+        "It is a gathering place for artists, students and visitors, and it cares for one of the "
+        "leading collections of modern and contemporary art.</p>"
+        f"<div class='facts'>{fact_cards}</div>"
+        "<div class='visit'><div><div class='yr'>Visit</div>"
+        "<b>11 West 53rd Street</b>, between Fifth and Sixth Avenues, in Midtown Manhattan. "
+        "Hours, tickets and gallery changes are on moma.org.</div>"
+        "<a href='https://www.moma.org' target='_blank' rel='noopener'>Plan your visit &rarr;</a></div>"
+        "</section>"
     )
 
 
@@ -768,8 +821,10 @@ def build_ui(bot):
         with gr.Column(elem_id="body"):
             gr.HTML(about_html(col))
             gr.HTML("<p class='sec'>Paintings on view</p>" + featured_html())
-            gr.HTML("<p class='sec'>Browse by floor</p>")
-            with gr.Row(elem_id="floors"):
+            gr.HTML("<p class='sec'>Ask a question</p>")
+            with gr.Row(elem_id="explore"):
+                explore_btns = [gr.Button(q, elem_classes=["ask-card"]) for q in EXPLORE]
+            with gr.Row(elem_id="floors", visible=False):
                 floor_btns = [
                     gr.Button(
                         f"Floor {f}\n{int(counts.get(f, 0)):,} works",
@@ -822,11 +877,18 @@ def build_ui(bot):
                 nav_msgs = gr.Button("Messages", elem_id="nav-messages", variant="secondary")
         launch = gr.Button("Ask", elem_id="chat-launch")
 
+        def launcher(is_open):
+            return gr.update(
+                value="✕ Close" if is_open else "Ask",
+                variant="secondary" if is_open else "primary",
+            )
+
         def toggle(is_open):
-            return (not is_open), gr.update(visible=not is_open)
+            now_open = not is_open
+            return now_open, gr.update(visible=now_open), launcher(now_open)
 
         def close_chat():
-            return False, gr.update(visible=False)
+            return False, gr.update(visible=False), launcher(False)
 
         pane_outs = [pane_home, pane_msgs, nav_home, nav_msgs]
 
@@ -842,8 +904,8 @@ def build_ui(bot):
         def open_messages():
             return (gr.update(visible=True), *show("messages"))
 
-        launch.click(toggle, [open_state], [open_state, panel], queue=False)
-        close_btn.click(close_chat, None, [open_state, panel], queue=False)
+        launch.click(toggle, [open_state], [open_state, panel, launch], queue=False)
+        close_btn.click(close_chat, None, [open_state, panel, launch], queue=False)
         send_btn.click(lambda: show("messages"), None, pane_outs, queue=False)
         nav_home.click(lambda: show("home"), None, pane_outs, queue=False)
         nav_msgs.click(lambda: show("messages"), None, pane_outs, queue=False)
@@ -853,7 +915,7 @@ def build_ui(bot):
         msg.submit(add_user, [msg, hist], [msg, hist, thread], queue=False).then(**run)
         for b in chips:
             b.click(add_user, [b, hist], [msg, hist, thread], queue=False).then(**run)
-        for b in starter_btns:
+        for b in starter_btns + explore_btns:
             b.click(add_user, [b, hist], [msg, hist, thread], queue=False).then(
                 open_messages, None, [panel, *pane_outs], queue=False
             ).then(**run)
