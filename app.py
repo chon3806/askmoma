@@ -267,6 +267,15 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
   .featured .art img {height:240px !important;}
 }
 
+/* ---- accessibility: text contrast (WCAG 2.2 SC 1.4.3, at least 4.5:1) ----
+   The refresh made the sidebar white and the header black; these rules still
+   assumed the old dark sidebar and light header. Colors reuse the theme's own. */
+#side .brand .name {color:#0b0b0c !important;}
+#side .brand .sub {color:#5b6470 !important;}
+#side button.primary {background:#e4e4e7 !important; color:#0b0b0c !important; box-shadow:inset 3px 0 0 #0b0b0c !important;}
+.avatar {background:#0b0b0c !important; color:#ffffff !important;}
+.status span {color:#d4d4d8 !important;}
+.fine {color:#5b6470 !important;}
 """
 
 
