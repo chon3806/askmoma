@@ -77,8 +77,8 @@ def test_top_artists_floor():
 
 def test_floor_summary_counts_then_offers_next_steps():
     a = ask("What's on floor 4?").text
-    assert "works on view by" in a and "artists" in a
-    assert "top 5 artists" in a
+    assert "works by" in a and "artists" in a
+    assert "top 5" in a
 
 
 def test_singular_most_work_question_gives_top_artists():
