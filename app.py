@@ -335,6 +335,15 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 #chatnav button {flex:1 1 0 !important; border-radius:12px !important; font-weight:600 !important; min-height:42px;}
 
 
+/* ---- accessibility: text contrast (WCAG 2.2 SC 1.4.3, at least 4.5:1) ----
+   The refresh made the sidebar white and the header black; these rules still
+   assumed the old dark sidebar and light header. Colors reuse the theme's own. */
+#side .brand .name {color:#0b0b0c !important;}
+#side .brand .sub {color:#5b6470 !important;}
+#side button.primary {background:#e4e4e7 !important; color:#0b0b0c !important; box-shadow:inset 3px 0 0 #0b0b0c !important;}
+.avatar {background:#0b0b0c !important; color:#ffffff !important;}
+.status span {color:#d4d4d8 !important;}
+.fine {color:#5b6470 !important;}
 """
 
 
@@ -498,7 +507,8 @@ def thread_html(history: list) -> str:
             "made, and what to see next.</p>"
             "<p>Try one of the questions below, or pick a floor on the page.</p></div></div></div>"
         )
-        return f"<div class='thread'><div class='inner'>{greeting}</div></div>"
+        return ("<div class='thread' role='log' aria-live='polite' aria-label='Conversation with AskMoMA'>"
+                f"<div class='inner'>{greeting}</div></div>")
     rows = []
     for q, a, cards in history:
         rows.append(f"<div class='row-u'><div class='bubble'>{_e(q)}</div></div>")
@@ -508,7 +518,11 @@ def thread_html(history: list) -> str:
             else "<div class='card'><span class='typing' aria-label='Working'><i></i><i></i><i></i></span></div>"
         )
         rows.append(f"<div class='row-a'><div class='avatar'>A</div><div class='ans'>{body}</div></div>")
-    return "<div class='thread'><div class='inner'>" + "".join(rows) + "</div></div>"
+    return (
+        "<div class='thread' role='log' aria-live='polite' aria-label='Conversation with AskMoMA'><div class='inner'>"
+        + "".join(rows)
+        + "</div></div>"
+    )
 
 
 def topbar_html(col) -> str:
@@ -614,7 +628,7 @@ def build_ui(bot):
 
     set_featured(bot.col.works)
 
-    from askmoma import config, llm
+    from askmoma import llm
 
     col = bot.col
     floors = sorted(col.floors(), reverse=True)
@@ -652,7 +666,7 @@ def build_ui(bot):
             return [thread_html(history), history, ctx] + [gr.update()] * (N_CHIPS + len(floors))
         question = history[-1][0]
         ans = bot.ask(question, ctx, on_view_only=on_view_only)
-        text = llm.polish(question, ans.text) if config.LLM_MODEL else ans.text
+        text = llm.polish(question, ans.text)  # unchanged unless ASKMOMA_LLM is set
         history[-1][1], history[-1][2] = md(text), ans.cards
         hit = set()
         for c in ans.cards:
@@ -717,6 +731,7 @@ def build_ui(bot):
                         chips = [gr.Button(visible=False, size="sm") for _ in range(N_CHIPS)]
                     msg = gr.Textbox(
                         elem_id="ask",
+                        label="Your question",  # announced by screen readers even though it is not shown
                         placeholder="Ask about an artwork, an artist, or your visit",
                         show_label=False,
                         container=False,
@@ -780,6 +795,8 @@ def build_ui(bot):
 
 
 def cli(bot):
+    from askmoma import llm
+
     print(bot.ask("hi").text, "\n(type 'quit' to exit)\n")
     ctx = None
     while True:
@@ -791,7 +808,7 @@ def cli(bot):
             break
         a = bot.ask(q, ctx)
         ctx = a.context
-        print(f"\naskmoma [{a.intent}]>\n{a.text}\n")
+        print(f"\naskmoma [{a.intent}]>\n{llm.polish(q, a.text)}\n")
         if a.suggestions:
             print("  try: " + " | ".join(a.suggestions) + "\n")
 
@@ -818,6 +835,10 @@ def main():
         sys.exit(1)
 
     bot = AskMoMA(load(args.data))
+    from askmoma import config, llm
+
+    if config.LLM_MODEL:
+        llm.load()  # at startup, so the first visitor does not wait for it
     if args.cli:
         cli(bot)
     else:

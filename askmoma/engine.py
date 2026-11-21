@@ -16,7 +16,7 @@ import pandas as pd
 
 from . import config
 from .data import Collection, norm
-from .nlu import Parsed, parse
+from .nlu import DESCRIPTIVE, Parsed, parse
 from .search import Searcher
 
 FAQ = json.loads((Path(__file__).parent / "faq.json").read_text(encoding="utf-8"))
@@ -136,7 +136,7 @@ class AskMoMA:
         elif p.intent in work_intents and not p.work_rows and p.artist_cids:
             handler = self._h_works_by_artist if p.intent != "who_made" else self._h_artist_info
         elif p.intent in work_intents and not p.work_rows:
-            handler = self._h_search
+            handler = self._h_work_not_found
         elif handler is None:
             handler = self._h_unknown
         ans = handler(p, floor_filter=floor_filter, on_view_only=on_view_only)
@@ -228,8 +228,8 @@ class AskMoMA:
     def _h_who_made(self, p, **_):
         def body(row, c):
             w = self.col.works.loc[row]
-            bio = _clean(w["ArtistBio"])
-            bio = f" ({bio})" if bio else ""
+            bio = _clean(w["ArtistBio"])  # MoMA's bios already carry brackets: "(French, 1840–1926)"
+            bio = f" {bio}" if bio.startswith("(") else f" ({bio})" if bio else ""
             where = f" It's on view on {c['location']}." if c["on_view"] else ""
             return (
                 f"**{c['title']}** was made by **{c['artist']}**{bio}, dated {c['date']}.{where}\n\n"
@@ -537,6 +537,26 @@ class AskMoMA:
             ],
             intent="search",
             context={"work_row": hits[0][0]},
+        )
+
+    def _h_work_not_found(self, p, **kw):
+        """A question about a work that is not in the data: say so, then offer close matches."""
+        if DESCRIPTIVE.search(p.text.lower()):  # "where can I see paintings of the sea?"
+            return self._h_search(p, **kw)
+        asked = p.residue or p.text
+        text = (
+            f"I couldn't find a work called **“{asked}”** in MoMA's collection data. "
+            f"It may not be in MoMA's collection; you can check on [moma.org]({config.MOMA_HOME}/collection/)."
+        )
+        hits = self.search.query(asked, k=4, min_score=0.35)
+        if hits:
+            lines = "\n".join(f"- {self._work_line(r)}" for r, _ in hits)
+            text += f"\n\nWorks on view that may be related:\n\n{lines}"
+        return Answer(
+            text=text + self._as_of(),
+            cards=[self._card(r) for r, _ in hits],
+            suggestions=["What can you do?", "What's on floor 5?"],
+            intent="not_found",
         )
 
     def _h_unknown(self, p, **kw):

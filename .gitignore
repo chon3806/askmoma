@@ -17,3 +17,10 @@ data/raw/
 # Secrets: none are needed, but never commit them
 .env
 *.part
+
+# Embedding cache written by askmoma/search.py
+.cache/
+
+# The full MoMA download (mise run data): too large for git
+data/Artworks.csv
+data/Artists.csv

@@ -97,6 +97,11 @@ INTENT_RULES: list[tuple[str, re.Pattern]] = [
     ("search", re.compile(r"\b(find|search|looking for|show me|any)\b")),
 ]
 
+# Plural kinds of work describe what to look for ("paintings of the sea") rather than name one work.
+DESCRIPTIVE = re.compile(
+    r"\b(paintings|photos|photographs|pictures|works|pieces|sculptures|drawings|prints|art about|art of)\b"
+)
+
 ORDINAL_FLOORS = {"first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5, "sixth": 6}
 
 
@@ -112,9 +117,11 @@ class Parsed:
     residue: str = ""  # message with intent words removed (for search)
 
 
-def detect_intent(text: str) -> str:
+def detect_intent(text: str, skip_faq: bool = False) -> str:
     t = text.lower()
     for name, pattern in INTENT_RULES:
+        if skip_faq and name.startswith("faq"):
+            continue
         if pattern.search(t):
             return name
     return "unknown"
@@ -134,10 +141,11 @@ def find_title(col: Collection, tokens: list[str]) -> tuple[list[int], tuple[int
             continue
         if n == 1 and (len(gram) < 4 or gram in STOP):
             continue
-        for key in (gram, gram[4:] if gram.startswith("the ") else None):
-            rows = col.title_index.get(key) if key else None
-            if not rows:
-                continue
+        # With or without a leading "the": "Starry Night" also means The Starry Night.
+        alt = gram[4:] if gram.startswith("the ") else f"the {gram}"
+        rows = col.title_index.get(gram, []) + col.title_index.get(alt, [])
+        if rows:
+            rows = sorted(rows, key=lambda r: not col.works.at[r, "on_view"])  # on view first
             # A title with a single content word ("Night", "Untitled") only counts
             # if it is on view; otherwise generic words would match old records.
             if len(content) == 1 and not col.works.at[rows[0], "on_view"]:
@@ -156,9 +164,30 @@ def find_artist(col: Collection, tokens: list[str]) -> tuple[list[str], tuple[in
         if gram in STOP or len(gram) < 4:
             continue
         last = gram.split()[-1]
-        if last in col.surname_index and (n == 1 or gram.endswith(last)):
-            return col.surname_index[last][:3], (i, i + n)
+        if last not in col.surname_index or last in col.nationalities:  # "French Window" is not Jared French
+            continue
+        # Several words must be the end of the artist's name ("van gogh"), not any
+        # phrase that happens to end in a surname ("night sky" is not Alison Sky).
+        cids = [c for c in col.surname_index[last] if n == 1 or _name_ends_with(col, c, gram)]
+        if cids:
+            return cids[:3], (i, i + n)
     return [], None
+
+
+def _name_ends_with(col: Collection, cid: str, gram: str) -> bool:
+    name = norm((col.artist(cid) or {}).get("DisplayName"))
+    return name == gram or name.endswith(" " + gram)
+
+
+def is_exact_artist(col: Collection, tokens: list[str], span: tuple[int, int] | None) -> bool:
+    """True when the matched words are an artist's full name, not just a surname."""
+    return bool(span) and " ".join(tokens[span[0] : span[1]]) in col.artist_index
+
+
+def _names_a_work(col: Collection, tokens: list[str]) -> bool:
+    """True when the message contains a title of two or more content words."""
+    rows, span = find_title(col, tokens)
+    return bool(rows) and len([t for t in tokens[span[0] : span[1]] if t not in STOP]) >= 2
 
 
 def _overlap(a, b) -> bool:
@@ -180,7 +209,15 @@ def fuzzy_title(col: Collection, residue: str) -> list[int]:
     stripped = {" ".join(w for w in t.split() if w not in STOP): t for t in pool}
     stripped.pop("", None)
     best = difflib.get_close_matches(" ".join(toks), list(stripped), n=1, cutoff=0.72)
-    return col.title_index.get(stripped[best[0]], []) if best else []
+    # Every word asked about must resemble a word of the title: "starry nite" is
+    # The Starry Night, but "sistine chapel" is not Roslin Chapel.
+    if not best or not all(_close_to_any(t, best[0].split(), 0.6) for t in toks):
+        return []
+    return col.title_index.get(stripped[best[0]], [])
+
+
+def _close_to_any(word: str, candidates: list[str], cutoff: float) -> bool:
+    return any(difflib.SequenceMatcher(None, word, c).ratio() >= cutoff for c in candidates)
 
 
 def fuzzy_artist(col: Collection, residue: str) -> list[str]:
@@ -189,9 +226,18 @@ def fuzzy_artist(col: Collection, residue: str) -> list[str]:
     best = difflib.get_close_matches(residue, list(col.artist_index), n=1, cutoff=0.82)
     if best:
         return [col.artist_index[best[0]]]
-    for tok in sorted(residue.split(), key=len, reverse=True):  # "piccaso" -> "picasso"
-        if len(tok) >= 5:
-            hit = difflib.get_close_matches(tok, list(col.surname_index), n=1, cutoff=0.8)
+    words = residue.split()
+    if len(words) != 1:
+        # A single misspelled word is matched to a surname only when it is all that was
+        # asked ("piccaso"); inside a longer phrase it is usually an ordinary word
+        # ("Girl with a Pearl Earring" is not Harvey Pekar, "Sistine Chapel" not Walter Chappell).
+        return []
+    for tok in words:  # "piccaso" -> "picasso"
+        if len(tok) >= 5 and tok not in col.nationalities:
+            # Typos rarely change the first letter; without this, "earring" became
+            # Gillian Wearing and "qwerty" became E. A. Wéry.
+            names = [s for s in col.surname_index if s[:1] == tok[:1]]
+            hit = difflib.get_close_matches(tok, names, n=1, cutoff=0.8)
             if hit:
                 return col.surname_index[hit[0]][:3]
     return []
@@ -214,6 +260,9 @@ def parse(col: Collection, text: str, context: dict | None = None) -> Parsed:
     if g:
         p.gallery = g.group(1).upper()
 
+    if intent.startswith("faq") and (p.floor or p.gallery or _names_a_work(col, tokens)):
+        # "What's open on floor 5?" and "How much is Starry Night worth?" are not visit questions.
+        intent = p.intent = detect_intent(text, skip_faq=True)
     if intent.startswith("faq") or intent == "greeting":
         return p
 
@@ -225,13 +274,25 @@ def parse(col: Collection, text: str, context: dict | None = None) -> Parsed:
     p.artist_cids, a_span = find_artist(col, tokens)
     if _overlap(t_span, a_span):
         # Same words matched both a title and an artist: let the question decide.
+        others, other_span = [], None
+        if t_span == a_span and is_exact_artist(col, tokens, a_span):
+            # "Flag by Jasper Johns": the full name is also a title, but another title is named.
+            others, other_span = find_title(col, tokens[: a_span[0]] + ["|"] + tokens[a_span[1] :])
         if artist_first:
             p.work_rows = []
+        elif others:
+            p.work_rows, t_span = others, other_span
         else:
             p.artist_cids = []
             # ...but the artist may be named elsewhere ("Water Lilies by Monet").
             rest = tokens[: t_span[0]] + ["|"] + tokens[t_span[1] :]
             p.artist_cids, _ = find_artist(col, rest)
+    if p.work_rows and p.artist_cids and len(p.work_rows) > 1:
+        # "Flag by Jasper Johns": the artist named picks between works sharing a title.
+        named = set(p.artist_cids)
+        by_artist = [r for r in p.work_rows if named.intersection(col.works.at[r, "cids"])]
+        if by_artist:
+            p.work_rows = by_artist
 
     for n_norm, label in col.nationalities.items():
         if re.search(rf"\b{re.escape(n_norm)}\b", norm(text)):
@@ -272,6 +333,13 @@ def parse(col: Collection, text: str, context: dict | None = None) -> Parsed:
         ):
             p.work_rows = [context["work_row"]]
 
+    if p.intent == "search" and p.artist_cids and not p.work_rows:
+        # A description search names an artist only if it is just the artist's full
+        # name ("find Frida Kahlo"); "find dreamy night sky paintings" stays a search.
+        named = set(range(*a_span)) if a_span else set()
+        others = [t for j, t in enumerate(tokens) if j not in named and t not in STOP]
+        if others or not is_exact_artist(col, tokens, a_span):
+            p.artist_cids = []
     if p.intent == "unknown" or p.intent == "search":
         if p.work_rows:
             p.intent = "work_info"

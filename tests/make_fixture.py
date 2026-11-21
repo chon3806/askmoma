@@ -70,7 +70,7 @@ def main():
             "BeginDate",
             "EndDate",
         ],
-    ).to_csv(HERE / "Artists.csv", index=False)
+    ).to_csv(HERE / "Artists.csv", index=False, lineterminator="\n")  # same bytes on every OS
     names = {a[0]: a[1] for a in ARTISTS}
     bios = {a[0]: a[2] for a in ARTISTS}
     rows = []
@@ -94,7 +94,7 @@ def main():
                 "OnView": onview,
             }
         )
-    pd.DataFrame(rows).to_csv(HERE / "Artworks.csv", index=False)
+    pd.DataFrame(rows).to_csv(HERE / "Artworks.csv", index=False, lineterminator="\n")
 
 
 if __name__ == "__main__":

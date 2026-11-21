@@ -6,6 +6,7 @@
 #
 #   mise install       # Python 3.12 and uv
 #   mise run setup     # install the project and its dev tools into .venv
+#   mise run setup-full  # the same, plus embedding search and the optional LLM (larger download)
 #   mise run app       # start the chat page
 #
 # Without mise, the same commands work with uv alone (see README.md).
@@ -17,6 +18,10 @@ uv = "0.11"
 [tasks.setup]
 description = "Install the project and dev tools into .venv (from uv.lock)"
 run = "uv sync"
+
+[tasks.setup-full]
+description = "Like setup, plus the optional extras: embedding search and the small LLM (CPU PyTorch)"
+run = "uv sync --all-extras"
 
 [tasks.data]
 description = "Download MoMA's Artworks.csv and Artists.csv into data/"
@@ -41,3 +46,7 @@ run = ["uv run ruff format .", "uv run ruff check --fix ."]
 [tasks.check]
 description = "Everything CI runs: lint, then tests"
 depends = ["lint", "test"]
+
+[tasks.eval]
+description = "Check 20 answers against moma.org and time them (evaluation/evaluate.py)"
+run = "uv run python -m evaluation.evaluate"

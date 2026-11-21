@@ -27,3 +27,27 @@ def test_real_sized_download_is_saved(tmp_path, monkeypatch):
     monkeypatch.setattr(download.urllib.request, "urlopen", lambda *a, **k: FakeResponse(content))
     assert download.main() == 0
     assert (tmp_path / "Artworks.csv").read_bytes() == content
+
+
+def test_pointer_leaves_no_file_behind(tmp_path, monkeypatch):
+    monkeypatch.setattr(download, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(download.urllib.request, "urlopen", lambda *a, **k: FakeResponse(b"version git-lfs"))
+    assert download.main() == 1
+    assert list(tmp_path.iterdir()) == []  # neither a pointer posing as Artworks.csv nor a .part file
+
+
+def test_interrupted_download_keeps_the_previous_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(download, "DATA_DIR", tmp_path)
+    (tmp_path / "Artworks.csv").write_bytes(b"the old, complete data")
+
+    class Broken(FakeResponse):
+        def read(self, *args):
+            raise ConnectionResetError("network dropped")
+
+    monkeypatch.setattr(download.urllib.request, "urlopen", lambda *a, **k: Broken(b""))
+    try:
+        download.main()
+    except ConnectionResetError:
+        pass
+    assert (tmp_path / "Artworks.csv").read_bytes() == b"the old, complete data"
+    assert not list(tmp_path.glob("*.part"))

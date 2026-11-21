@@ -18,6 +18,17 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+Or, with [mise](https://mise.jdx.dev) and uv, which install the exact versions in `uv.lock`:
+
+```bash
+mise install          # Python 3.12 and uv
+mise run setup        # core install: TF-IDF search, starts fast
+mise run setup-full   # adds embedding search and the optional LLM (CPU-only PyTorch)
+```
+
+Without mise, `uv sync --all-extras` does the same as `setup-full`; install one extra with
+`uv sync --extra embeddings` or `uv sync --extra llm`.
+
 ## 2. Get the data
 
 The data is MoMA's public collection dataset
@@ -49,8 +60,19 @@ python app.py --share         # temporary public link (e.g. for the demo)
 python app.py --data tests/fixtures   # tiny fictional test data
 ```
 
-The first run with `sentence-transformers` installed downloads
-all-MiniLM-L6-v2 (~90 MB) and caches embeddings in `.cache/`.
+With the `embeddings` extra installed, search by description uses
+all-MiniLM-L6-v2 sentence embeddings and a FAISS index, so "chairs and furniture
+design" finds chairs even when no title contains those words. The first run
+downloads the model (~90 MB) and encodes the works on view (about a minute on a
+laptop); later runs load the vectors from `.cache/` in about a second. Without
+the extra, search falls back to TF-IDF keyword matching.
+
+With the `llm` extra installed and `ASKMOMA_LLM` set, a small language model
+rewords single answers (lists are left as they are). It only sees the answer
+AskMoMA already built, and its wording is used only if every link is kept, no
+link is added, and no number (gallery, floor, date, price) is new; otherwise
+the original answer is shown. It runs on the CPU, so each answer takes a few
+seconds longer; `HuggingFaceTB/SmolLM2-360M-Instruct` is the lighter choice.
 
 ## 4. What it can answer
 
@@ -81,10 +103,15 @@ Typos are tolerated ("starry nite", "Piccaso").
 | `ASKMOMA_DATA_DIR` | `./data` | Folder with the CSVs |
 | `ASKMOMA_DATA_AS_OF` | CSV file date | Date shown with every answer |
 | `ASKMOMA_SEARCH_SCOPE` | `on_view` | `all` to search the whole collection |
+| `ASKMOMA_SEARCH_BACKEND` | `auto` | `auto` (embeddings if installed, else TF-IDF), `embeddings` (fail if unavailable), or `tfidf` |
 | `ASKMOMA_EMBED_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model |
 | `ASKMOMA_LLM` | empty (off) | e.g. `Qwen/Qwen2.5-1.5B-Instruct` or `HuggingFaceTB/SmolLM2-360M-Instruct` |
 
 ## 6. Project layout
+
+![AskMoMA architecture: app.py, engine.py, nlu.py, the scenario handlers, and the data, search, FAQ, and optional LLM modules](docs/figures/architecture.png)
+
+The diagram is drawn by `docs/figures/architecture.py` (`uv run python docs/figures/architecture.py`). Update it when a module is added or renamed.
 
 ```
 app.py               Gradio UI + terminal mode
@@ -96,6 +123,7 @@ askmoma/search.py    embeddings + FAISS (or TF-IDF) for description search
 askmoma/llm.py       optional small LLM that rewords answers
 askmoma/faq.json     visitor FAQ with sources and dates
 tests/               fictional fixture + scenario tests (pytest)
+evaluation/          20-question check against moma.org, with timing (mise run eval)
 ```
 
 ## 7. Tests
@@ -104,10 +132,45 @@ tests/               fictional fixture + scenario tests (pytest)
 python -m pytest tests -q
 ```
 
+`tests/test_search.py` covers both search backends and `tests/test_llm.py` the
+LLM layer's checks. Tests that need an optional extra are marked `embeddings` or
+`llm` and are skipped unless it is installed; skip them on purpose with
+`pytest -m "not embeddings and not llm"`.
+
 The fixture in `tests/fixtures/` is fictional (made-up artists and titles
 with MoMA's column layout) so tests run without the real data.
 
-## 8. Known limitations
+## 8. Evaluation
+
+`evaluation/evaluate.py` carries out the design document's evaluation plan. It
+asks the 20 questions in `evaluation/questions.json` about well-known works
+(including typos and two works not on view), then opens the moma.org page each
+answer links to and checks that:
+
+- the answer is about the work the question names,
+- the link opens that same work on moma.org, and
+- the floor and gallery (or "not on view") match what moma.org says today.
+
+It also times every answer, and with `--llm MODEL` the time the optional LLM
+adds. The report goes to `evaluation/results/<date>.md` (and `.csv`).
+
+```bash
+mise run eval                                    # or: uv run python -m evaluation.evaluate
+uv run python -m evaluation.evaluate --llm HuggingFaceTB/SmolLM2-360M-Instruct
+uv run python -m evaluation.evaluate --pages evaluation/moma_pages/2026-11-21   # pages read in a browser
+```
+
+moma.org's robots.txt allows these pages, and the script fetches at most one
+per second. If moma.org refuses the request (it has answered HTTP 403 to the
+script), the script stops asking and marks those checks "not checked"; it does
+not try to get around the refusal. Instead, open each work's page in a
+browser and either save it as `<ObjectID>.html` (the number at the end of its
+URL) or record what it says in `<ObjectID>.json` (`name`, `artists`, `status`,
+`location`), all in one folder, and run with `--pages` that folder.
+`evaluation/moma_pages/2026-11-21/` holds the 20 records read in Chrome on
+November 21, 2026, and `evaluation/results/` the reports from that day.
+
+## 9. Known limitations
 
 - The repo does not document the `OnView` format. `data.py` reads
   "Floor N" and a 3-digit gallery number and otherwise shows the raw text.
