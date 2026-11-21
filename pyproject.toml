@@ -21,6 +21,7 @@ askmoma = "askmoma.ui.app:main"
 
 [dependency-groups]
 dev = [
+    "matplotlib>=3.10.9",
     "pytest>=8",
     "ruff>=0.6",
 ]

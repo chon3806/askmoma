@@ -38,7 +38,7 @@ mise run app        # start the chat page, then open the address it prints
 | `mise run check` | Lint and test, the same as CI |
 | `mise run data` | Re-download MoMA's data and rebuild `data/on_view.csv` |
 
-**Without mise**, install [uv](https://docs.astral.sh/uv/getting-started/installation/) and use the same commands directly: `uv sync`, `uv run askmoma`, `uv run pytest`, `uv run ruff check .`.
+**Without mise**, install [uv](https://docs.astral.sh/uv/getting-started/installation/) and use the same commands directly: `uv sync`, `uv run python -m askmoma`, `uv run pytest`, `uv run ruff check .`.
 
 ## Project structure
 

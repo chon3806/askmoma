@@ -24,7 +24,7 @@ run = "uv run python -m askmoma.data.fetch"
 
 [tasks.app]
 description = "Start the AskMoMA chat page"
-run = "uv run askmoma"
+run = "uv run python -m askmoma"   # python -m also works where policy blocks generated .exe launchers
 
 [tasks.test]
 description = "Run the tests"
