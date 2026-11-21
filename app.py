@@ -33,7 +33,7 @@ STARTERS = [
 N_CHIPS = 4
 
 CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
 
 :root, .dark, body {
   --bg:#f6f7f9; --panel:#ffffff; --side:#0f172a; --side-2:#1e293b; --side-text:#cbd5e1;
@@ -148,6 +148,125 @@ footer {display:none !important;}
   #side {flex:1 1 100% !important; max-width:100%;}
   .caps {grid-template-columns:1fr;} .topbar {padding:14px 18px;} .thread {height:60vh;}
 }
+
+/* ---- visual refresh */
+.featured {display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; margin-top:18px;}
+.art {display:block; background:#ffffff; border-radius:18px; overflow:hidden; text-decoration:none !important;
+  border:1px solid rgba(255,255,255,.85); box-shadow:0 10px 30px -18px rgba(15,23,42,.35);}
+.art img {display:block; width:100%; height:200px; object-fit:cover; background:#e5e7eb;}
+.art span {display:block; padding:10px 12px 12px; color:#4b5563; font-size:.84rem; line-height:1.35;}
+.art b {display:block; color:#0b0b0c; font-size:.92rem; font-weight:600;}
+@media (max-width: 760px) {.featured {grid-template-columns:1fr;}}
+/* ---- visual refresh: light stage, serif display, pill controls ---- */
+:root, .dark, body {
+  --bg:#f4f4f5; --side:#ffffff; --side-2:#f1f3f6; --side-text:#1f2937;
+  --ink:#0b0b0c; --muted:#5b6470; --line:#e5e7eb; --accent:#0b0b0c; --accent-soft:#f1f3f6;
+  --display:'Instrument Serif', Georgia, 'Times New Roman', serif;
+}
+#side {border-right:1px solid var(--line) !important;}
+#side .brand .logo {background:#0b0b0c;}
+#side .sec {color:#6b7280;}
+#side #newchat {background:#0b0b0c !important; color:#fff !important; border-radius:999px !important;}
+#side button {color:#1f2937 !important;}
+#side button:hover {background:#f1f3f6 !important; color:#0b0b0c !important;}
+#side button:focus-visible {outline:2px solid #0b0b0c !important;}
+.sidefoot {color:#6b7280; border-top:1px solid var(--line);}
+.sidefoot a {color:#1f2937;}
+.topbar {background:transparent; border-bottom:0;}
+.status {background:#ffffff;}
+.welcome {
+  background:linear-gradient(180deg, rgba(228,228,231,.9) 0%, rgba(244,244,245,.92) 60%, rgba(244,244,245,.97) 100%),;
+  border-radius:28px; padding:48px 44px 36px; margin:8px 0 0; text-align:left;
+}
+.welcome .kicker {display:inline-flex; align-items:center; gap:10px; font-size:.85rem; color:#374151;
+  background:#ffffff; border-radius:999px; padding:6px 14px 6px 6px;}
+.welcome .kicker .dot {width:26px; height:26px; border-radius:50%; background:#0b0b0c; color:#fff;
+  display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:.8rem;}
+.welcome h1 {font-family:var(--display); font-weight:400; font-size:clamp(2.6rem, 6vw, 4.4rem);
+  line-height:.98; letter-spacing:-.02em; color:#0b0b0c; margin:22px 0 14px; max-width:14ch;}
+.welcome h1 em {font-style:italic;}
+.welcome .lede {font-size:1.05rem; line-height:1.55; color:#3f3f46; max-width:46ch; margin:0;}
+.welcome .caps {margin:28px 0 0; max-width:none; grid-template-columns:repeat(3, minmax(0,1fr));}
+.welcome .cap {background:rgba(255,255,255,.6); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.85); border-radius:18px; padding:18px 18px 16px;}
+.welcome .cap .tick {display:inline-block; width:22px; height:22px; border-radius:7px; background:#0b0b0c;
+  position:relative; margin-bottom:12px;}
+.welcome .cap .tick::after {content:""; position:absolute; left:8px; top:4px; width:5px; height:10px;
+  border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg);}
+.welcome .cap b {font-size:1rem; color:#0b0b0c;}
+.welcome .cap span {color:#4b5563;}
+@media (max-width: 760px) {
+  .welcome {padding:28px 22px;}
+  .welcome .caps {grid-template-columns:1fr;}
+}
+.bubble {background:#0b0b0c !important; color:#ffffff !important;}
+.card {border-radius:20px !important;}
+#chips button {background:#ffffff !important; border:1px solid #e5e7eb !important; border-radius:999px !important;
+  color:#111827 !important;}
+#chips button::before {content:"\\2713"; display:inline-block; margin-right:8px; width:18px; height:18px;
+  line-height:18px; text-align:center; border-radius:6px; background:#f97316; color:#ffffff; font-size:12px;}
+#chips button:hover {border-color:#0b0b0c !important; background:#ffffff !important; color:#0b0b0c !important;}
+#ask {border-radius:999px !important; padding-left:18px !important;}
+#ask button {background:#0b0b0c !important; color:#ffffff !important; border-radius:999px !important;}
+button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
+/* ---- polish: sidebar, header, hero ---- */
+#side .sec {font-size:.72rem !important; letter-spacing:.08em; text-transform:uppercase; color:#6b7280 !important; font-weight:600; padding:0 12px; margin-top:18px;}
+#side button:not(#newchat) {border-radius:12px !important; padding:9px 12px !important; font-size:.92rem !important; font-weight:500 !important;}
+#side button:not(#newchat):hover {box-shadow:inset 3px 0 0 #0b0b0c !important;}
+#side #newchat {box-shadow:0 8px 18px -10px rgba(11,11,12,.6);}
+.topbar {padding:14px 28px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.7); backdrop-filter:blur(8px);}
+.topbar .t {font-family:var(--display); font-size:1.35rem; font-weight:400; letter-spacing:-.01em; color:#0b0b0c;}
+.topbar .t small {font-family:inherit; font-size:.85rem;}
+.status {border:1px solid var(--line); border-radius:999px; padding:6px 14px; box-shadow:0 1px 2px rgba(15,23,42,.06);}
+.welcome {box-shadow:0 30px 60px -40px rgba(15,23,42,.35);}
+.welcome .cap {box-shadow:0 12px 28px -20px rgba(15,23,42,.45);}
+.featured .art {transition:transform .18s ease, box-shadow .18s ease;}
+.featured .art:hover {transform:translateY(-3px); box-shadow:0 18px 36px -20px rgba(15,23,42,.5);}
+.featured .art img {height:220px;}
+
+/* ---- dark gallery theme (header, hero, cards) ---- */
+.topbar {background:#0b0b0c !important; border-bottom:1px solid #1f1f23 !important;}
+.topbar .t {color:#f5f5f4 !important;}
+.topbar .t small {color:#a1a1aa !important;}
+.status {background:#18181b !important; border-color:#27272a !important; color:#d4d4d8 !important;}
+.status b {color:#fafafa !important;}
+.welcome {border:1px solid #27272a;}
+.welcome h1 {font-family:"Inter", system-ui, sans-serif !important; font-weight:800 !important; text-transform:uppercase;
+  letter-spacing:-.015em; line-height:.98; color:#fafafa !important; font-size:clamp(2.4rem, 5.4vw, 4.2rem) !important;}
+.welcome h1 em {font-family:var(--display) !important; text-transform:none; font-weight:400; color:#fafafa !important;}
+.welcome .kicker {font-family:ui-monospace, SFMono-Regular, Menlo, monospace !important; text-transform:uppercase;
+  letter-spacing:.14em; font-size:.74rem !important; color:#e4e4e7 !important;}
+.welcome .kicker span:last-child {background:transparent;}
+.welcome .kicker .dot {background:#fafafa !important; color:#0b0b0c !important;}
+.welcome .lede {color:#d4d4d8 !important;}
+.welcome .cap {background:rgba(12,12,14,.55) !important; border-color:rgba(255,255,255,.14) !important; box-shadow:none !important;}
+.welcome .cap b {color:#fafafa !important;}
+.welcome .cap span {color:#a1a1aa !important;}
+.welcome .cap .tick {background:#fafafa !important;}
+.featured .art {background:#18181b !important; border-color:rgba(255,255,255,.1) !important;}
+.featured .art b {color:#fafafa !important;}
+.featured .art span {color:#a1a1aa !important;}
+
+/* ---- roomier layout ---- */
+.topbar {padding:24px 44px !important;}
+.welcome {padding:88px 72px 72px !important; min-height:620px; display:flex; flex-direction:column; justify-content:center;}
+.welcome .kicker {margin-bottom:28px;}
+.welcome h1 {margin:0 0 26px !important;}
+.welcome .lede {margin-bottom:0; max-width:52ch;}
+.welcome .caps {gap:20px !important; margin-top:48px !important;}
+.welcome .cap {padding:24px 24px 26px !important;}
+.welcome .cap b {margin-bottom:8px;}
+.featured {gap:24px !important; margin-top:40px !important;}
+.featured .art img {height:300px !important;}
+.featured .art span {padding:16px 18px 18px !important;}
+#side button:not(#newchat) {padding:12px 16px !important; margin-bottom:2px;}
+#side .sec {margin-top:28px !important; margin-bottom:6px;}
+@media (max-width: 900px) {
+  .welcome {padding:56px 28px 48px !important; min-height:0;}
+  .featured {grid-template-columns:1fr !important;}
+  .featured .art img {height:240px !important;}
+}
+
 """
 
 
@@ -210,18 +329,70 @@ def md(text: str) -> str:
     return "".join(out)
 
 
+FEATURED_TITLES = [
+    "The Starry Night",
+    "Water Lilies",
+    "Les Demoiselles d'Avignon",
+    "The Persistence of Memory",
+]
+_featured: list[dict] = []  # filled by build_ui from the works on view
+
+
+def set_featured(works) -> None:
+    """Pick the well-known works that are on view and have an image link."""
+    _featured.clear()
+    for title in FEATURED_TITLES:
+        rows = works[
+            (works["Title"] == title) & (works["Classification"] == "Painting") & works["ImageURL"].notna()
+        ]
+        if len(rows):
+            row = rows.iloc[0]
+            _featured.append(
+                {"title": title, "artist": row["Artist"], "image": row["ImageURL"], "link": row["link"]}
+            )
+        if len(_featured) == 3:
+            break
+
+
+def _bg_style() -> str:
+    """Background for the welcome card: a MoMA painting, faded behind the text."""
+    if not _featured:
+        return ""
+    img = _e(_featured[0]["image"])
+    return (
+        "background: linear-gradient(180deg, rgba(10,10,12,.35) 0%, rgba(10,10,12,.82) 70%, "
+        f"rgba(10,10,12,.95) 100%), url('{img}') center 30% / cover no-repeat;"
+    )
+
+
+def featured_html() -> str:
+    if not _featured:
+        return ""
+    items = "".join(
+        f"<a class='art' href='{_e(f['link'])}' target='_blank' rel='noopener'>"
+        f"<img src='{_e(f['image'])}' alt='{_e(f['title'])}' loading='lazy'>"
+        f"<span><b>{_e(f['title'])}</b>{_e(f['artist'])}</span></a>"
+        for f in _featured
+    )
+    return f"<div class='featured'>{items}</div>"
+
+
 def welcome_html() -> str:
     caps = [
         ("Find a work", "Get the floor and gallery for any artwork on view."),
         ("Learn about it", "Who made it, when, the medium, and how MoMA acquired it."),
         ("Decide what's next", "Recommendations nearby, by the same artist, or from the same period."),
     ]
-    grid = "".join(f"<div class='cap'><b>{t}</b><span>{d}</span></div>" for t, d in caps)
+    grid = "".join(
+        f"<div class='cap'><span class='tick'></span><b>{t}</b><span>{d}</span></div>" for t, d in caps
+    )
     return (
-        "<div class='welcome'><div class='logo'>A</div><h2>Welcome to AskMoMA</h2>"
-        "<p>Your guide to the art on view at The Museum of Modern Art. Ask a question below, "
-        "or pick a floor from the sidebar.</p>"
-        f"<div class='caps'>{grid}</div></div>"
+        f'<div class="welcome" style="{_bg_style()}">'
+        "<div class='kicker'><span class='dot'>A</span><span>Museum guide for works on view at MoMA</span></div>"
+        "<h1>Ask about the art <em>at MoMA</em></h1>"
+        "<p class='lede'>Where a work hangs, who made it, and what to see next. "
+        "Every answer links to moma.org.</p>"
+        f"<div class='caps'>{grid}</div>{featured_html()}</div>"
     )
 
 
@@ -274,6 +445,8 @@ def topbar_html(col) -> str:
 # ---------------------------------------------------------------- UI
 def build_ui(bot):
     import gradio as gr
+
+    set_featured(bot.col.works)
 
     from askmoma import config, llm
 
