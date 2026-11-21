@@ -86,6 +86,10 @@ Typos are tolerated ("starry nite", "Piccaso").
 
 ## 6. Project layout
 
+![AskMoMA architecture: app.py, engine.py, nlu.py, the scenario handlers, and the data, search, FAQ, and optional LLM modules](docs/figures/architecture.png)
+
+The diagram is drawn by `docs/figures/architecture.py` (`uv run python docs/figures/architecture.py`). Update it when a module is added or renamed.
+
 ```
 app.py               Gradio UI + terminal mode
 askmoma/config.py    settings
