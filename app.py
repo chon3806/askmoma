@@ -247,6 +247,26 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .featured .art b {color:#fafafa !important;}
 .featured .art span {color:#a1a1aa !important;}
 
+/* ---- roomier layout ---- */
+.topbar {padding:24px 44px !important;}
+.welcome {padding:88px 72px 72px !important; min-height:620px; display:flex; flex-direction:column; justify-content:center;}
+.welcome .kicker {margin-bottom:28px;}
+.welcome h1 {margin:0 0 26px !important;}
+.welcome .lede {margin-bottom:0; max-width:52ch;}
+.welcome .caps {gap:20px !important; margin-top:48px !important;}
+.welcome .cap {padding:24px 24px 26px !important;}
+.welcome .cap b {margin-bottom:8px;}
+.featured {gap:24px !important; margin-top:40px !important;}
+.featured .art img {height:300px !important;}
+.featured .art span {padding:16px 18px 18px !important;}
+#side button:not(#newchat) {padding:12px 16px !important; margin-bottom:2px;}
+#side .sec {margin-top:28px !important; margin-bottom:6px;}
+@media (max-width: 900px) {
+  .welcome {padding:56px 28px 48px !important; min-height:0;}
+  .featured {grid-template-columns:1fr !important;}
+  .featured .art img {height:240px !important;}
+}
+
 """
 
 
