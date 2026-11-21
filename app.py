@@ -307,7 +307,7 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .art em.credit a, a.credit {color:#52525b;}
 .hero-credit {color:#e4e4e7 !important; margin-top:14px; font-size:.85rem; text-decoration:underline;}
 .featured {margin-top:14px;}
-.site-footer {display:grid; grid-template-columns:1fr 1.4fr; gap:32px; margin-top:56px; padding:32px 0 8px; border-top:1px solid #e4e4e7; color:#3f3f46;}
+.site-footer {display:grid; width:100%; box-sizing:border-box; clear:both; grid-template-columns:1fr 1.4fr; gap:32px; margin-top:56px; padding:32px 0 8px; border-top:1px solid #e4e4e7; color:#3f3f46;}
 .site-footer b {color:#0b0b0c; font-size:1.05rem;}
 .site-footer p, .site-footer li {font-size:.92rem; line-height:1.6;}
 .site-footer ul {padding-left:18px; margin:8px 0 0;}
@@ -553,7 +553,7 @@ def home_html() -> str:
 
 def footer_html(col) -> str:
     return (
-        "<footer class='site-footer'>"
+        "<div class='site-footer'>"
         "<div><b>AskMoMA</b>"
         "<p>A student project for MSAI-631 at the University of the Cumberlands. "
         "Not affiliated with The Museum of Modern Art.</p>"
@@ -568,7 +568,7 @@ def footer_html(col) -> str:
         "<li>Built with Gradio, pandas and scikit-learn.</li>"
         "<li>Fonts: Inter and Instrument Serif (Google Fonts).</li>"
         "</ul></div>"
-        "</footer>"
+        "</div>"
     )
 
 
