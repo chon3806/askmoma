@@ -81,9 +81,13 @@ def parse_on_view(value) -> tuple[int | None, str | None, str]:
     have seen in the wild ("MoMA, Floor 5, 501", "Floor 5, Gallery 501",
     "Gallery 501") and falls back to the raw text.
     """
-    if not isinstance(value, str) or not value.strip():
+    if not isinstance(value, str) or not value.strip(' "'):
         return None, None, ""
-    raw = value.strip()
+    raw = value.strip().strip('"').strip()  # some rows keep the CSV's quote marks
+    if re.search(r"\bPS1\b", raw, re.I):
+        # MoMA PS1 is a separate building in Queens; its floors are not the museum's.
+        rest = re.sub(r"^\s*MoMA PS1\s*,?\s*", "", raw, flags=re.I)
+        return None, None, "MoMA PS1 in Queens (not the Manhattan museum)" + (f", {rest}" if rest else "")
     floor_m = re.search(r"floor\s*(\d+)", raw, re.I)
     gallery_m = re.search(r"(?:gallery\s*)?\b(\d{3}[A-Za-z]?)\b", raw, re.I)
     floor = int(floor_m.group(1)) if floor_m else None
