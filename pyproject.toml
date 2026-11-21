@@ -27,6 +27,12 @@ embeddings = [
     "faiss-cpu>=1.8",
     "torch>=2.4",
 ]
+# A small instruction-tuned model that rewords answers (set ASKMOMA_LLM to use it).
+# Install with `uv sync --extra llm`.
+llm = [
+    "transformers>=4.56",
+    "torch>=2.4",
+]
 
 [project.scripts]
 askmoma = "askmoma.__main__:main"
@@ -61,6 +67,7 @@ testpaths = ["tests"]
 addopts = "-q"
 markers = [
     "embeddings: needs the `embeddings` extra and the MiniLM model (skipped when not installed)",
+    "llm: needs the `llm` extra and a small language model (skipped when not installed)",
 ]
 
 [tool.ruff]

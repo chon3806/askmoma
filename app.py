@@ -461,7 +461,7 @@ def build_ui(bot):
 
     set_featured(bot.col.works)
 
-    from askmoma import config, llm
+    from askmoma import llm
 
     col = bot.col
     floors = sorted(col.floors(), reverse=True)
@@ -499,7 +499,7 @@ def build_ui(bot):
             return [thread_html(history), history, ctx] + [gr.update()] * (N_CHIPS + len(floors))
         question = history[-1][0]
         ans = bot.ask(question, ctx, on_view_only=on_view_only)
-        text = llm.polish(question, ans.text) if config.LLM_MODEL else ans.text
+        text = llm.polish(question, ans.text)  # unchanged unless ASKMOMA_LLM is set
         history[-1][1], history[-1][2] = md(text), ans.cards
         hit = set()
         for c in ans.cards:
@@ -587,6 +587,8 @@ def build_ui(bot):
 
 
 def cli(bot):
+    from askmoma import llm
+
     print(bot.ask("hi").text, "\n(type 'quit' to exit)\n")
     ctx = None
     while True:
@@ -598,7 +600,7 @@ def cli(bot):
             break
         a = bot.ask(q, ctx)
         ctx = a.context
-        print(f"\naskmoma [{a.intent}]>\n{a.text}\n")
+        print(f"\naskmoma [{a.intent}]>\n{llm.polish(q, a.text)}\n")
         if a.suggestions:
             print("  try: " + " | ".join(a.suggestions) + "\n")
 
@@ -625,6 +627,10 @@ def main():
         sys.exit(1)
 
     bot = AskMoMA(load(args.data))
+    from askmoma import config, llm
+
+    if config.LLM_MODEL:
+        llm.load()  # at startup, so the first visitor does not wait for it
     if args.cli:
         cli(bot)
     else:

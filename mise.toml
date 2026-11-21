@@ -6,7 +6,7 @@
 #
 #   mise install       # Python 3.12 and uv
 #   mise run setup     # install the project and its dev tools into .venv
-#   mise run setup-full  # the same, plus embedding search (larger download)
+#   mise run setup-full  # the same, plus embedding search and the optional LLM (larger download)
 #   mise run app       # start the chat page
 #
 # Without mise, the same commands work with uv alone (see README.md).
@@ -20,8 +20,8 @@ description = "Install the project and dev tools into .venv (from uv.lock)"
 run = "uv sync"
 
 [tasks.setup-full]
-description = "Like setup, plus embedding search (sentence-transformers, FAISS, CPU PyTorch)"
-run = "uv sync --extra embeddings"
+description = "Like setup, plus the optional extras: embedding search and the small LLM (CPU PyTorch)"
+run = "uv sync --all-extras"
 
 [tasks.data]
 description = "Download MoMA's Artworks.csv and Artists.csv into data/"

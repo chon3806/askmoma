@@ -23,10 +23,11 @@ Or, with [mise](https://mise.jdx.dev) and uv, which install the exact versions i
 ```bash
 mise install          # Python 3.12 and uv
 mise run setup        # core install: TF-IDF search, starts fast
-mise run setup-full   # adds embedding search (sentence-transformers, FAISS, CPU-only PyTorch)
+mise run setup-full   # adds embedding search and the optional LLM (CPU-only PyTorch)
 ```
 
-Without mise, `uv sync --extra embeddings` does the same as `setup-full`.
+Without mise, `uv sync --all-extras` does the same as `setup-full`; install one extra with
+`uv sync --extra embeddings` or `uv sync --extra llm`.
 
 ## 2. Get the data
 
@@ -65,6 +66,13 @@ design" finds chairs even when no title contains those words. The first run
 downloads the model (~90 MB) and encodes the works on view (about a minute on a
 laptop); later runs load the vectors from `.cache/` in about a second. Without
 the extra, search falls back to TF-IDF keyword matching.
+
+With the `llm` extra installed and `ASKMOMA_LLM` set, a small language model
+rewords single answers (lists are left as they are). It only sees the answer
+AskMoMA already built, and its wording is used only if every link is kept, no
+link is added, and no number (gallery, floor, date, price) is new; otherwise
+the original answer is shown. It runs on the CPU, so each answer takes a few
+seconds longer; `HuggingFaceTB/SmolLM2-360M-Instruct` is the lighter choice.
 
 ## 4. What it can answer
 
@@ -123,9 +131,10 @@ tests/               fictional fixture + scenario tests (pytest)
 python -m pytest tests -q
 ```
 
-`tests/test_search.py` covers both search backends. Its embedding tests are
-marked `embeddings` and are skipped unless the extra is installed; skip them
-on purpose with `pytest -m "not embeddings"`.
+`tests/test_search.py` covers both search backends and `tests/test_llm.py` the
+LLM layer's checks. Tests that need an optional extra are marked `embeddings` or
+`llm` and are skipped unless it is installed; skip them on purpose with
+`pytest -m "not embeddings and not llm"`.
 
 The fixture in `tests/fixtures/` is fictional (made-up artists and titles
 with MoMA's column layout) so tests run without the real data.

@@ -22,9 +22,9 @@ jobs:
       - name: Test
         run: uv run pytest
 
-  # Search with sentence embeddings: installs the `embeddings` extra (CPU-only
-  # PyTorch) and runs the tests marked `embeddings`, which the job above skips.
-  embeddings:
+  # The optional extras: installs embedding search and the small LLM (CPU-only
+  # PyTorch) and runs the tests marked `embeddings` or `llm`, which the job above skips.
+  extras:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,10 +35,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/huggingface
-          key: hf-all-MiniLM-L6-v2
-      - name: Install with the embeddings extra
-        run: uv sync --locked --extra embeddings
-      - name: Check the extra is importable
-        run: uv run python -c "import faiss, sentence_transformers, torch; print(torch.__version__)"
-      - name: Test search with embeddings
-        run: uv run pytest -m embeddings
+          key: hf-minilm-smollm2-135m
+      - name: Install with all extras
+        run: uv sync --locked --all-extras
+      - name: Check the extras are importable
+        run: uv run python -c "import faiss, sentence_transformers, transformers, torch; print(torch.__version__)"
+      - name: Test embedding search and the LLM layer
+        run: uv run pytest -m "embeddings or llm"
