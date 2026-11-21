@@ -75,8 +75,22 @@ def test_top_artists_floor():
     assert a.text.index("Tomas Arbel") < a.text.index("Ines Calder")
 
 
-def test_floor_and_gallery_lists():
-    assert "Number 7" in ask("What's on floor 4?").text
+def test_floor_summary_counts_then_offers_next_steps():
+    a = ask("What's on floor 4?").text
+    assert "works on view by" in a and "artists" in a
+    assert "top 5 artists" in a
+
+
+def test_top_five_then_artist_link():
+    a = ask("Which artists have the most works on floor 5?")
+    chips = [c for c in a.suggestions if c.startswith("MoMA link for")]
+    assert 1 <= len(chips) <= 5
+    link = ask(chips[0])
+    assert "https://www.moma.org/search/?q=" in link.text
+    assert "works on view on floor 5" in link.text or "on floor 5" in link.text
+
+
+def test_gallery_list_still_works():
     assert "Night Garden" in ask("what is in gallery 208").text
 
 
