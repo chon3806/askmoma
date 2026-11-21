@@ -44,6 +44,7 @@ python -m pytest tests -q
 | `src/askmoma/locate.py` | Use case 1: finding a work and its location |
 | `scripts/fetch_data.py` | Downloads MoMA's data and builds `data/on_view.csv` |
 | `data/SOURCE.md` | Which version of MoMA's data is used, and when it was downloaded |
+| `docs/design-notes.md` | Open questions and design decisions, recorded as the team researches them |
 | `tests/` | Tests, run with pytest |
 
 ## Working together
