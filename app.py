@@ -1,10 +1,11 @@
 """AskMoMA: Gradio UI.
 
-    python app.py                         # web UI at http://127.0.0.1:7860
-    python app.py --port 7861             # if 7860 is busy
-    python app.py --data tests/fixtures   # small fictional test data
-    python app.py --cli                   # chat in the terminal
+python app.py                         # web UI at http://127.0.0.1:7860
+python app.py --port 7861             # if 7860 is busy
+python app.py --data tests/fixtures   # small fictional test data
+python app.py --cli                   # chat in the terminal
 """
+
 from __future__ import annotations
 
 import argparse
@@ -166,8 +167,13 @@ def md(text: str) -> str:
     t = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", t)
     t = re.sub(r"(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?!\w)", r"<em>\1</em>", t)
     t = re.sub(r"(?<!\w)_(?!\s)(.+?)(?<!\s)_(?!\w)", r"<em>\1</em>", t)
-    t = re.sub(r"\x00(\d+)\x00", lambda m: "<a href='{}' target='_blank' rel='noopener'>{}</a>".format(
-        _e(links[int(m.group(1))][1]), html.escape(links[int(m.group(1))][0])), t)
+    t = re.sub(
+        r"\x00(\d+)\x00",
+        lambda m: (
+            f"<a href='{_e(links[int(m.group(1))][1])}' target='_blank' rel='noopener'>{html.escape(links[int(m.group(1))][0])}</a>"
+        ),
+        t,
+    )
 
     out, para, items, kind = [], [], [], None
 
@@ -203,14 +209,18 @@ def md(text: str) -> str:
 
 
 def welcome_html() -> str:
-    caps = [("Find a work", "Get the floor and gallery for any artwork on view."),
-            ("Learn about it", "Who made it, when, the medium, and how MoMA acquired it."),
-            ("Decide what's next", "Recommendations nearby, by the same artist, or from the same period.")]
+    caps = [
+        ("Find a work", "Get the floor and gallery for any artwork on view."),
+        ("Learn about it", "Who made it, when, the medium, and how MoMA acquired it."),
+        ("Decide what's next", "Recommendations nearby, by the same artist, or from the same period."),
+    ]
     grid = "".join(f"<div class='cap'><b>{t}</b><span>{d}</span></div>" for t, d in caps)
-    return ("<div class='welcome'><div class='logo'>A</div><h2>Welcome to AskMoMA</h2>"
-            "<p>Your guide to the art on view at The Museum of Modern Art. Ask a question below, "
-            "or pick a floor from the sidebar.</p>"
-            f"<div class='caps'>{grid}</div></div>")
+    return (
+        "<div class='welcome'><div class='logo'>A</div><h2>Welcome to AskMoMA</h2>"
+        "<p>Your guide to the art on view at The Museum of Modern Art. Ask a question below, "
+        "or pick a floor from the sidebar.</p>"
+        f"<div class='caps'>{grid}</div></div>"
+    )
 
 
 def works_html(cards: list[dict], limit: int = 6) -> str:
@@ -223,11 +233,16 @@ def works_html(cards: list[dict], limit: int = 6) -> str:
             thumb = f"<div class='thumb' style=\"background-image:url('{_e(img)}')\"></div>"
         else:
             thumb = f"<div class='thumb'>{_e((c['title'] or '?')[:1].upper())}</div>"
-        tag = (f"<span class='tag on'>{_e(c['location'])}</span>" if c["on_view"]
-               else "<span class='tag off'>Not on view</span>")
+        tag = (
+            f"<span class='tag on'>{_e(c['location'])}</span>"
+            if c["on_view"]
+            else "<span class='tag off'>Not on view</span>"
+        )
         why = f"<div class='why'>{_e(c['reason'])}</div>" if c.get("reason") else ""
-        out.append(f"<a class='work' href='{_e(c['link'])}' target='_blank' rel='noopener'>{thumb}<div class='info'>"
-                   f"<div class='ti'>{_e(c['title'])}</div><div class='ar'>{_e(c['artist'])}, {_e(c['date'])}</div>{tag}{why}</div></a>")
+        out.append(
+            f"<a class='work' href='{_e(c['link'])}' target='_blank' rel='noopener'>{thumb}<div class='info'>"
+            f"<div class='ti'>{_e(c['title'])}</div><div class='ar'>{_e(c['artist'])}, {_e(c['date'])}</div>{tag}{why}</div></a>"
+        )
     return "<div class='works'>" + "".join(out) + "</div>"
 
 
@@ -237,21 +252,27 @@ def thread_html(history: list) -> str:
     rows = []
     for q, a, cards in history:
         rows.append(f"<div class='row-u'><div class='bubble'>{_e(q)}</div></div>")
-        body = (f"<div class='card'>{a}</div>{works_html(cards)}" if a
-                else "<div class='card'><span class='typing' aria-label='Working'><i></i><i></i><i></i></span></div>")
+        body = (
+            f"<div class='card'>{a}</div>{works_html(cards)}"
+            if a
+            else "<div class='card'><span class='typing' aria-label='Working'><i></i><i></i><i></i></span></div>"
+        )
         rows.append(f"<div class='row-a'><div class='avatar'>A</div><div class='ans'>{body}</div></div>")
     return "<div class='thread'><div class='inner'>" + "".join(rows) + "</div></div>"
 
 
 def topbar_html(col) -> str:
-    return ("<div class='topbar'><div class='t'>Museum guide<small>Answers come from MoMA's public collection data</small></div>"
-            f"<div class='status'><i></i><span><b>{len(col.on_view):,}</b> works on view</span>"
-            f"<span>Updated {_e(col.as_of)}</span></div></div>")
+    return (
+        "<div class='topbar'><div class='t'>Museum guide<small>Answers come from MoMA's public collection data</small></div>"
+        f"<div class='status'><i></i><span><b>{len(col.on_view):,}</b> works on view</span>"
+        f"<span>Updated {_e(col.as_of)}</span></div></div>"
+    )
 
 
 # ---------------------------------------------------------------- UI
 def build_ui(bot):
     import gradio as gr
+
     from askmoma import config, llm
 
     col = bot.col
@@ -259,12 +280,18 @@ def build_ui(bot):
     counts = col.on_view["floor"].dropna().astype(int).value_counts()
 
     theme = gr.themes.Base(primary_hue=gr.themes.colors.blue, neutral_hue=gr.themes.colors.slate).set(
-        body_background_fill="#f6f7f9", body_background_fill_dark="#f6f7f9",
-        body_text_color="#0f172a", body_text_color_dark="#0f172a",
-        background_fill_primary="#ffffff", background_fill_primary_dark="#ffffff",
-        background_fill_secondary="#ffffff", background_fill_secondary_dark="#ffffff",
-        input_background_fill="#ffffff", input_background_fill_dark="#ffffff",
-        block_background_fill="#ffffff", block_background_fill_dark="#ffffff",
+        body_background_fill="#f6f7f9",
+        body_background_fill_dark="#f6f7f9",
+        body_text_color="#0f172a",
+        body_text_color_dark="#0f172a",
+        background_fill_primary="#ffffff",
+        background_fill_primary_dark="#ffffff",
+        background_fill_secondary="#ffffff",
+        background_fill_secondary_dark="#ffffff",
+        input_background_fill="#ffffff",
+        input_background_fill_dark="#ffffff",
+        block_background_fill="#ffffff",
+        block_background_fill_dark="#ffffff",
     )
 
     def chip_updates(suggestions):
@@ -291,48 +318,77 @@ def build_ui(bot):
             f = col.works.at[c["row"], "floor"]
             if c["on_view"] and f is not None and f == f:
                 hit.add(int(f))
-        return [thread_html(history), history, ans.context] + chip_updates(ans.suggestions) + \
-            [gr.update(variant="primary" if f in hit else "secondary") for f in floors]
+        return (
+            [thread_html(history), history, ans.context]
+            + chip_updates(ans.suggestions)
+            + [gr.update(variant="primary" if f in hit else "secondary") for f in floors]
+        )
 
     def reset():
-        return [thread_html([]), [], {}] + chip_updates(None) + [gr.update(variant="secondary") for _ in floors]
+        return (
+            [thread_html([]), [], {}] + chip_updates(None) + [gr.update(variant="secondary") for _ in floors]
+        )
 
     with gr.Blocks(title="AskMoMA", theme=theme, css=CSS, fill_width=True) as demo:
         hist = gr.State([])
         ctx = gr.State({})
         with gr.Row(elem_id="shell", equal_height=True):
             with gr.Column(scale=0, min_width=272, elem_id="side"):
-                gr.HTML("<div class='brand'><div class='logo'>A</div><div><div class='name'>AskMoMA</div>"
-                        "<div class='sub'>Museum guide</div></div></div>")
+                gr.HTML(
+                    "<div class='brand'><div class='logo'>A</div><div><div class='name'>AskMoMA</div>"
+                    "<div class='sub'>Museum guide</div></div></div>"
+                )
                 new_chat = gr.Button("New conversation", elem_id="newchat")
                 gr.HTML("<p class='sec'>Browse by floor</p>")
-                floor_btns = [gr.Button(f"Floor {f}  ({int(counts.get(f, 0)):,} work{'' if counts.get(f, 0) == 1 else 's'})",
-                                        variant="secondary") for f in floors]
+                floor_btns = [
+                    gr.Button(
+                        f"Floor {f}  ({int(counts.get(f, 0)):,} work{'' if counts.get(f, 0) == 1 else 's'})",
+                        variant="secondary",
+                    )
+                    for f in floors
+                ]
                 gr.HTML("<p class='sec'>Popular questions</p>")
-                starter_btns = [gr.Button(q) for q in STARTERS + ["What are the museum hours?", "How much is admission?"]]
-                gr.HTML(f"<div class='sidefoot'>Collection data from MoMA's public "
-                        f"<a href='https://github.com/MuseumofModernArt/collection' target='_blank' rel='noopener'>GitHub dataset</a> "
-                        f"(CC0), {_e(col.as_of)}.<br>Student project for MSAI-631. Not affiliated with MoMA.</div>")
+                starter_btns = [
+                    gr.Button(q) for q in STARTERS + ["What are the museum hours?", "How much is admission?"]
+                ]
+                gr.HTML(
+                    f"<div class='sidefoot'>Collection data from MoMA's public "
+                    f"<a href='https://github.com/MuseumofModernArt/collection' target='_blank' rel='noopener'>GitHub dataset</a> "
+                    f"(CC0), {_e(col.as_of)}.<br>Student project for MSAI-631. Not affiliated with MoMA.</div>"
+                )
             with gr.Column(scale=1, elem_id="main"):
                 gr.HTML(topbar_html(col))
                 thread = gr.HTML(thread_html([]))
                 with gr.Column(elem_id="composer"):
                     with gr.Row(elem_id="chips"):
                         chips = [gr.Button(visible=False, size="sm") for _ in range(N_CHIPS)]
-                    msg = gr.Textbox(elem_id="ask", placeholder="Ask about an artwork, an artist, or your visit",
-                                     show_label=False, container=False, autofocus=True, submit_btn="Send", lines=1, max_lines=4)
-                    gr.HTML("<p class='fine'>Gallery locations can change. Check the moma.org link before you go.</p>")
+                    msg = gr.Textbox(
+                        elem_id="ask",
+                        placeholder="Ask about an artwork, an artist, or your visit",
+                        show_label=False,
+                        container=False,
+                        autofocus=True,
+                        submit_btn="Send",
+                        lines=1,
+                        max_lines=4,
+                    )
+                    gr.HTML(
+                        "<p class='fine'>Gallery locations can change. Check the moma.org link before you go.</p>"
+                    )
                 with gr.Row(elem_id="opts"):
-                    on_view_only = gr.Checkbox(value=True, label="Only list works that are on view", container=False)
+                    on_view_only = gr.Checkbox(
+                        value=True, label="Only list works that are on view", container=False
+                    )
 
         outs = [thread, hist, ctx, *chips, *floor_btns]
         run = dict(fn=answer, inputs=[hist, ctx, on_view_only], outputs=outs)
         msg.submit(add_user, [msg, hist], [msg, hist, thread], queue=False).then(**run)
         for b in chips + starter_btns:
             b.click(add_user, [b, hist], [msg, hist, thread], queue=False).then(**run)
-        for f, b in zip(floors, floor_btns):
-            b.click(functools.partial(add_user, f"What's on floor {f}?"), [hist], [msg, hist, thread],
-                    queue=False).then(**run)
+        for f, b in zip(floors, floor_btns, strict=True):
+            b.click(
+                functools.partial(add_user, f"What's on floor {f}?"), [hist], [msg, hist, thread], queue=False
+            ).then(**run)
         new_chat.click(reset, None, outs)
     return demo
 
@@ -363,6 +419,7 @@ def main():
     args = ap.parse_args()
 
     from askmoma import AskMoMA, load
+
     bot = AskMoMA(load(args.data))
     if args.cli:
         cli(bot)

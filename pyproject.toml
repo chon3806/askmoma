@@ -44,3 +44,6 @@ target-version = "py310"
 [tool.ruff.lint]
 # pycodestyle, pyflakes, import order, modern syntax, and common bugs.
 select = ["E", "F", "I", "UP", "B"]
+# `ruff format` already wraps code at line-length; what is left over 110 are CSS,
+# regex and URL strings that cannot be split without hurting readability.
+ignore = ["E501"]

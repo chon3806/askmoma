@@ -3,6 +3,8 @@
 A conversational guide to the art on view at The Museum of Modern Art.
 Group 4, MSAI-631-M80, University of the Cumberlands.
 
+**Team:** Dipu Biswas, Heman Chongbang Limbu, Sarina Tamang, Soham Nitin Ghorpade, Xinran Peng
+
 Ask in plain English, for example *"Where is The Starry Night?"*,
 *"Who painted Water Lilies?"* or *"I loved The Starry Night. What else should I see?"*,
 and AskMoMA answers from MoMA's own collection data, with a link back to

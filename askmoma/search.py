@@ -4,6 +4,7 @@ Uses sentence embeddings (all-MiniLM-L6-v2) with a FAISS index when those
 packages are installed, and falls back to TF-IDF (scikit-learn) otherwise,
 so the app always starts.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -40,10 +41,12 @@ class Searcher:
     def _build(self):
         try:
             from sentence_transformers import SentenceTransformer
+
             self._model = SentenceTransformer(config.EMBED_MODEL)
             emb = self._cached_embeddings()
             try:
                 import faiss
+
                 self._index = faiss.IndexFlatIP(emb.shape[1])
                 self._index.add(emb)
                 self.backend = "embeddings+faiss"
@@ -54,6 +57,7 @@ class Searcher:
         except Exception as exc:  # missing package, no network for the model, etc.
             log.warning("Embeddings unavailable (%s); using TF-IDF search.", exc)
         from sklearn.feature_extraction.text import TfidfVectorizer
+
         self._tfidf = TfidfVectorizer(ngram_range=(1, 2), sublinear_tf=True, stop_words="english")
         self._matrix = self._tfidf.fit_transform(self.docs)
         self.backend = "tfidf"
@@ -63,8 +67,9 @@ class Searcher:
         path = config.CACHE_DIR / f"emb_{key}.npy"
         if path.exists():
             return np.load(path)
-        emb = self._model.encode(self.docs, batch_size=64, normalize_embeddings=True,
-                                 show_progress_bar=len(self.docs) > 2000).astype("float32")
+        emb = self._model.encode(
+            self.docs, batch_size=64, normalize_embeddings=True, show_progress_bar=len(self.docs) > 2000
+        ).astype("float32")
         config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
         np.save(path, emb)
         return emb
@@ -86,7 +91,7 @@ class Searcher:
         vec = self._encode(text)
         if self._index is not None:
             scores, idx = self._index.search(vec, k)
-            pairs = [(int(self.rows[i]), float(s)) for i, s in zip(idx[0], scores[0]) if i >= 0]
+            pairs = [(int(self.rows[i]), float(s)) for i, s in zip(idx[0], scores[0], strict=True) if i >= 0]
         else:
             scores = self._scores(vec)
             top = np.argsort(-scores)[:k]

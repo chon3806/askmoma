@@ -1,4 +1,5 @@
 """Scenario tests on the fictional fixture. Run: python -m pytest tests -q"""
+
 import os
 import sys
 from pathlib import Path
@@ -131,8 +132,8 @@ def test_suggestion_chips_are_answerable():
 
 def test_title_that_is_also_an_artist_name():
     # Add a work titled with an artist's name, as real photo records often are.
-    import pandas as pd
     from askmoma.data import load as _load
+
     col = _load(ROOT / "tests" / "fixtures")
     bot = AskMoMA(col)
     row = col.works.index[col.works["Title"] == "Drip Study"][0]

@@ -4,6 +4,7 @@ Column names follow the public repo
 (https://github.com/MuseumofModernArt/collection). Missing optional columns
 are tolerated so the app still starts on older or trimmed copies of the data.
 """
+
 from __future__ import annotations
 
 import datetime as dt
@@ -18,14 +19,39 @@ import pandas as pd
 from . import config
 
 ARTWORK_COLS = [
-    "Title", "Artist", "ConstituentID", "ArtistBio", "Nationality", "BeginDate",
-    "EndDate", "Gender", "Date", "Medium", "Dimensions", "CreditLine",
-    "AccessionNumber", "Classification", "Department", "DateAcquired",
-    "Cataloged", "ObjectID", "URL", "ImageURL", "ThumbnailURL", "OnView",
+    "Title",
+    "Artist",
+    "ConstituentID",
+    "ArtistBio",
+    "Nationality",
+    "BeginDate",
+    "EndDate",
+    "Gender",
+    "Date",
+    "Medium",
+    "Dimensions",
+    "CreditLine",
+    "AccessionNumber",
+    "Classification",
+    "Department",
+    "DateAcquired",
+    "Cataloged",
+    "ObjectID",
+    "URL",
+    "ImageURL",
+    "ThumbnailURL",
+    "OnView",
 ]
 ARTIST_COLS = [
-    "ConstituentID", "DisplayName", "ArtistBio", "Nationality", "Gender",
-    "BeginDate", "EndDate", "Wiki QID", "ULAN",
+    "ConstituentID",
+    "DisplayName",
+    "ArtistBio",
+    "Nationality",
+    "Gender",
+    "BeginDate",
+    "EndDate",
+    "Wiki QID",
+    "ULAN",
 ]
 
 _PUNCT = re.compile(r"[^\w\s]")
@@ -88,12 +114,12 @@ class Collection:
     works: pd.DataFrame
     artists: pd.DataFrame
     as_of: str
-    title_index: dict = field(default_factory=dict)     # norm title -> [row]
-    title_tokens: dict = field(default_factory=dict)    # token -> {norm title}
-    artist_index: dict = field(default_factory=dict)    # norm name -> cid
-    surname_index: dict = field(default_factory=dict)   # last token -> [cid]
-    works_by_artist: dict = field(default_factory=dict) # cid -> [row]
-    nationalities: dict = field(default_factory=dict)   # norm nat -> label
+    title_index: dict = field(default_factory=dict)  # norm title -> [row]
+    title_tokens: dict = field(default_factory=dict)  # token -> {norm title}
+    artist_index: dict = field(default_factory=dict)  # norm name -> cid
+    surname_index: dict = field(default_factory=dict)  # last token -> [cid]
+    works_by_artist: dict = field(default_factory=dict)  # cid -> [row]
+    nationalities: dict = field(default_factory=dict)  # norm nat -> label
 
     # ---- convenience -------------------------------------------------
     @property
@@ -117,8 +143,9 @@ class Collection:
 def _read_csv(path: Path, wanted: list[str]) -> pd.DataFrame:
     header = pd.read_csv(path, nrows=0, encoding="utf-8").columns
     cols = [c for c in wanted if c in header]
-    return pd.read_csv(path, usecols=cols, dtype=str, encoding="utf-8",
-                       keep_default_na=True, low_memory=False)
+    return pd.read_csv(
+        path, usecols=cols, dtype=str, encoding="utf-8", keep_default_na=True, low_memory=False
+    )
 
 
 def load(data_dir: Path | None = None) -> Collection:
@@ -128,7 +155,8 @@ def load(data_dir: Path | None = None) -> Collection:
     if not works_path.exists():
         raise FileNotFoundError(
             f"Artworks.csv not found in {data_dir}. See README: download it from "
-            "https://github.com/MuseumofModernArt/collection")
+            "https://github.com/MuseumofModernArt/collection"
+        )
 
     works = _read_csv(works_path, ARTWORK_COLS)
     for col in ARTWORK_COLS:
@@ -139,28 +167,28 @@ def load(data_dir: Path | None = None) -> Collection:
     works["title_norm"] = works["Title"].map(norm)
     works["year"] = works["Date"].map(first_year)
     loc = works["OnView"].map(parse_on_view)
-    works["floor"] = [l[0] for l in loc]
-    works["gallery"] = [l[1] for l in loc]
-    works["location"] = [l[2] for l in loc]
+    works["floor"] = [x[0] for x in loc]
+    works["gallery"] = [x[1] for x in loc]
+    works["location"] = [x[2] for x in loc]
     works["on_view"] = works["location"].str.len() > 0
     works["cids"] = works["ConstituentID"].map(_split_ids)
     works["Artist"] = works["Artist"].fillna("Unknown artist")
     works["link"] = [
-        u if isinstance(u, str) and u.startswith("http")
-        else config.WORK_URL.format(object_id=o)
-        for u, o in zip(works["URL"], works["ObjectID"])
+        u if isinstance(u, str) and u.startswith("http") else config.WORK_URL.format(object_id=o)
+        for u, o in zip(works["URL"], works["ObjectID"], strict=True)
     ]
 
     if artists_path.exists():
         artists = _read_csv(artists_path, ARTIST_COLS)
         artists["ConstituentID"] = artists["ConstituentID"].map(
-            lambda v: _split_ids(v)[0] if _split_ids(v) else None)
+            lambda v: _split_ids(v)[0] if _split_ids(v) else None
+        )
         artists = artists.dropna(subset=["ConstituentID", "DisplayName"])
     else:
         # Rebuild a minimal artist table from the artwork rows.
         rows = []
-        for names, cids in zip(works["Artist"], works["cids"]):
-            for name, cid in zip(str(names).split(", "), cids):
+        for names, cids in zip(works["Artist"], works["cids"], strict=True):
+            for name, cid in zip(str(names).split(", "), cids, strict=False):
                 rows.append({"ConstituentID": cid, "DisplayName": name})
         artists = pd.DataFrame(rows)
     artists = artists.drop_duplicates("ConstituentID").set_index("ConstituentID")
@@ -191,7 +219,7 @@ def _build_indexes(col: Collection) -> None:
     col.title_tokens = dict(title_tokens)
 
     works_by_artist: dict[str, list[int]] = defaultdict(list)
-    for row, cids in zip(order, works.loc[order, "cids"]):
+    for row, cids in zip(order, works.loc[order, "cids"], strict=True):
         for cid in cids:
             works_by_artist[cid].append(row)
     col.works_by_artist = dict(works_by_artist)
@@ -208,7 +236,7 @@ def _build_indexes(col: Collection) -> None:
         toks = n.split()
         if len(toks) > 1 and len(toks[-1]) > 2:
             surname_index[toks[-1]].append(cid)
-    for k, cids in surname_index.items():
+    for cids in surname_index.values():
         cids.sort(key=lambda c: -len(works_by_artist.get(c, [])))
     col.artist_index = artist_index
     col.surname_index = dict(surname_index)

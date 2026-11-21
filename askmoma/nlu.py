@@ -4,6 +4,7 @@ Rule-based on purpose: it is fast, runs on any laptop, and every decision can
 be traced. The optional LLM layer only rewords answers; it never decides
 what the facts are.
 """
+
 from __future__ import annotations
 
 import difflib
@@ -13,7 +14,8 @@ from dataclasses import dataclass, field
 from .data import Collection, norm
 
 # Words that describe the request rather than the artwork/artist.
-STOP = set("""
+STOP = set(
+    """
 a an the of on in at to for is are was were be been it its this that these those
 who whom whose what which where when why how do does did can could would should
 i me my we our you your he she him her they them their there here
@@ -24,27 +26,71 @@ give list any some all please moma museum see view on_view displayed display
 floor gallery galleries same similar like liked love loved enjoyed enjoy else
 other more year years old medium size big dimensions acquire acquired get got
 info information details detail and or with
-""".split())
+""".split()
+)
 
-PRONOUN_WORK = re.compile(r"\b(it|this|that|this one|that one|this work|that work|the painting|this painting)\b")
+PRONOUN_WORK = re.compile(
+    r"\b(it|this|that|this one|that one|this work|that work|the painting|this painting)\b"
+)
 PRONOUN_ARTIST = re.compile(r"\b(they|them|he|she|him|her|this artist|that artist|the artist)\b")
 
 INTENT_RULES: list[tuple[str, re.Pattern]] = [
-    ("greeting", re.compile(r"^\s*(hi|hello|hey|good (morning|afternoon|evening))\b|\b(help|what can you do|how do you work)\b")),
+    (
+        "greeting",
+        re.compile(
+            r"^\s*(hi|hello|hey|good (morning|afternoon|evening))\b|\b(help|what can you do|how do you work)\b"
+        ),
+    ),
     ("faq_hours", re.compile(r"\b(hours?|open(ing)?|clos(e|ed|ing)|what time)\b")),
-    ("faq_admission", re.compile(r"\b(tickets?|admission|price|prices|cost|how much|free (entry|admission|day|night))\b")),
+    (
+        "faq_admission",
+        re.compile(r"\b(tickets?|admission|price|prices|cost|how much|free (entry|admission|day|night))\b"),
+    ),
     ("faq_access", re.compile(r"\b(wheelchair|accessib\w*|disabilit\w*|service animal|care partner)\b")),
-    ("faq_address", re.compile(r"\b(address|where is moma|where is the museum|how do i get (there|to moma))\b")),
-    ("top_artists", re.compile(r"\b(most|top|rank\w*|biggest|leading)\b.*\bartists?\b|\bartists?\b.*\b(most works|most pieces)\b")),
-    ("recommend", re.compile(r"\b(i (really )?(loved|liked|love|like|enjoyed)|similar to|recommend\w*|suggest\w*|what else should i see|more like)\b")),
-    ("location", re.compile(r"\b(where (is|are|can i (find|see))|which (floor|gallery|room)|is .* on view|can i see|on display)\b")),
-    ("who_made", re.compile(r"\b(who (made|painted|created|did|drew|designed|photographed|sculpted|is the artist of|was the artist of)|artist (of|behind)|by whom)\b")),
+    (
+        "faq_address",
+        re.compile(r"\b(address|where is moma|where is the museum|how do i get (there|to moma))\b"),
+    ),
+    (
+        "top_artists",
+        re.compile(
+            r"\b(most|top|rank\w*|biggest|leading)\b.*\bartists?\b|\bartists?\b.*\b(most works|most pieces)\b"
+        ),
+    ),
+    (
+        "recommend",
+        re.compile(
+            r"\b(i (really )?(loved|liked|love|like|enjoyed)|similar to|recommend\w*|suggest\w*|what else should i see|more like)\b"
+        ),
+    ),
+    (
+        "location",
+        re.compile(
+            r"\b(where (is|are|can i (find|see))|which (floor|gallery|room)|is .* on view|can i see|on display)\b"
+        ),
+    ),
+    (
+        "who_made",
+        re.compile(
+            r"\b(who (made|painted|created|did|drew|designed|photographed|sculpted|is the artist of|was the artist of)|artist (of|behind)|by whom)\b"
+        ),
+    ),
     ("when_made", re.compile(r"\b(when was .* (made|painted|created|done)|what year|how old|date of)\b")),
     ("medium", re.compile(r"\b(medium|made of|materials?|what kind of (paint|material))\b")),
     ("dimensions", re.compile(r"\b(how (big|large|tall|wide)|size|dimensions)\b")),
     ("acquired", re.compile(r"\b(acquir\w*|when did moma (get|buy)|credit line|gift of|donat\w*)\b")),
-    ("works_by_artist", re.compile(r"\b(works?|paintings?|pieces?|art|photos?|photographs?|sculptures?|prints?|drawings?) (by|from)\b|\bwhat (else )?(did|does|has) .*\b(make|made|paint|painted|create|created)\b|\bwhat else (by|from)\b")),
-    ("floor_list", re.compile(r"\b(on|in) (floor|level) \d+\b|\bfloor \d+\b|\bgallery \d{3}\b|\bfifth floor|fourth floor|second floor|third floor\b")),
+    (
+        "works_by_artist",
+        re.compile(
+            r"\b(works?|paintings?|pieces?|art|photos?|photographs?|sculptures?|prints?|drawings?) (by|from)\b|\bwhat (else )?(did|does|has) .*\b(make|made|paint|painted|create|created)\b|\bwhat else (by|from)\b"
+        ),
+    ),
+    (
+        "floor_list",
+        re.compile(
+            r"\b(on|in) (floor|level) \d+\b|\bfloor \d+\b|\bgallery \d{3}\b|\bfifth floor|fourth floor|second floor|third floor\b"
+        ),
+    ),
     ("artist_info", re.compile(r"\b(who (is|was)|tell me about|about the artist|biography|bio)\b")),
     ("search", re.compile(r"\b(find|search|looking for|show me|any)\b")),
 ]
@@ -75,7 +121,7 @@ def detect_intent(text: str) -> str:
 def _ngrams(tokens: list[str], max_n: int = 12):
     for n in range(min(max_n, len(tokens)), 0, -1):
         for i in range(len(tokens) - n + 1):
-            yield i, n, " ".join(tokens[i:i + n])
+            yield i, n, " ".join(tokens[i : i + n])
 
 
 def find_title(col: Collection, tokens: list[str]) -> tuple[list[int], tuple[int, int] | None]:
@@ -182,7 +228,7 @@ def parse(col: Collection, text: str, context: dict | None = None) -> Parsed:
         else:
             p.artist_cids = []
             # ...but the artist may be named elsewhere ("Water Lilies by Monet").
-            rest = tokens[:t_span[0]] + ["|"] + tokens[t_span[1]:]
+            rest = tokens[: t_span[0]] + ["|"] + tokens[t_span[1] :]
             p.artist_cids, _ = find_artist(col, rest)
 
     for n_norm, label in col.nationalities.items():
@@ -196,13 +242,17 @@ def parse(col: Collection, text: str, context: dict | None = None) -> Parsed:
     # "find dreamy night sky paintings": a title covering only part of a
     # description is a coincidence, so search by meaning instead.
     if intent == "search" and p.work_rows and t_span:
-        outside = [t for j, t in enumerate(tokens)
-                   if not (t_span[0] <= j < t_span[1]) and t not in STOP]
+        outside = [t for j, t in enumerate(tokens) if not (t_span[0] <= j < t_span[1]) and t not in STOP]
         if outside:
             p.work_rows = []
 
     # Fuzzy fallbacks for typos ("starry nite", "piccaso").
-    if not p.work_rows and not p.artist_cids and p.residue and intent not in ("top_artists", "floor_list", "search"):
+    if (
+        not p.work_rows
+        and not p.artist_cids
+        and p.residue
+        and intent not in ("top_artists", "floor_list", "search")
+    ):
         p.work_rows = fuzzy_title(col, p.residue)
         if not p.work_rows:
             p.artist_cids = fuzzy_artist(col, p.residue)
@@ -213,8 +263,11 @@ def parse(col: Collection, text: str, context: dict | None = None) -> Parsed:
             p.work_rows = [context["work_row"]]
         elif PRONOUN_ARTIST.search(lower) and context.get("artist_cid"):
             p.artist_cids = [context["artist_cid"]]
-        elif intent in ("location", "who_made", "when_made", "medium", "dimensions", "acquired") \
-                and context.get("work_row") is not None and not keep:
+        elif (
+            intent in ("location", "who_made", "when_made", "medium", "dimensions", "acquired")
+            and context.get("work_row") is not None
+            and not keep
+        ):
             p.work_rows = [context["work_row"]]
 
     if p.intent == "unknown" or p.intent == "search":
