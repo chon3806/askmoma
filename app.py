@@ -224,6 +224,29 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .featured .art:hover {transform:translateY(-3px); box-shadow:0 18px 36px -20px rgba(15,23,42,.5);}
 .featured .art img {height:220px;}
 
+/* ---- dark gallery theme (header, hero, cards) ---- */
+.topbar {background:#0b0b0c !important; border-bottom:1px solid #1f1f23 !important;}
+.topbar .t {color:#f5f5f4 !important;}
+.topbar .t small {color:#a1a1aa !important;}
+.status {background:#18181b !important; border-color:#27272a !important; color:#d4d4d8 !important;}
+.status b {color:#fafafa !important;}
+.welcome {border:1px solid #27272a;}
+.welcome h1 {font-family:"Inter", system-ui, sans-serif !important; font-weight:800 !important; text-transform:uppercase;
+  letter-spacing:-.015em; line-height:.98; color:#fafafa !important; font-size:clamp(2.4rem, 5.4vw, 4.2rem) !important;}
+.welcome h1 em {font-family:var(--display) !important; text-transform:none; font-weight:400; color:#fafafa !important;}
+.welcome .kicker {font-family:ui-monospace, SFMono-Regular, Menlo, monospace !important; text-transform:uppercase;
+  letter-spacing:.14em; font-size:.74rem !important; color:#e4e4e7 !important;}
+.welcome .kicker span:last-child {background:transparent;}
+.welcome .kicker .dot {background:#fafafa !important; color:#0b0b0c !important;}
+.welcome .lede {color:#d4d4d8 !important;}
+.welcome .cap {background:rgba(12,12,14,.55) !important; border-color:rgba(255,255,255,.14) !important; box-shadow:none !important;}
+.welcome .cap b {color:#fafafa !important;}
+.welcome .cap span {color:#a1a1aa !important;}
+.welcome .cap .tick {background:#fafafa !important;}
+.featured .art {background:#18181b !important; border-color:rgba(255,255,255,.1) !important;}
+.featured .art b {color:#fafafa !important;}
+.featured .art span {color:#a1a1aa !important;}
+
 """
 
 
@@ -317,8 +340,8 @@ def _bg_style() -> str:
         return ""
     img = _e(_featured[0]["image"])
     return (
-        "background: linear-gradient(180deg, rgba(228,228,231,.9) 0%, rgba(244,244,245,.92) 60%, "
-        f"rgba(244,244,245,.97) 100%), url('{img}') center 30% / cover no-repeat;"
+        "background: linear-gradient(180deg, rgba(10,10,12,.35) 0%, rgba(10,10,12,.82) 70%, "
+        f"rgba(10,10,12,.95) 100%), url('{img}') center 30% / cover no-repeat;"
     )
 
 
