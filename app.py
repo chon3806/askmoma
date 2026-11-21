@@ -267,6 +267,17 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
   .featured .art img {height:240px !important;}
 }
 
+/* ---- MoMA-style header, hero, and floating chat popup ---- */
+.mh {display:flex; align-items:center; justify-content:space-between; padding:18px 40px; background:#ffffff; border-bottom:1px solid #e4e4e7;}
+.mh-logo {font-weight:900; font-size:1.8rem; letter-spacing:-.02em; color:#0b0b0c;}
+.mh-nav a {margin-left:28px; color:#0b0b0c; font-weight:700; font-size:1rem; text-decoration:none;}
+.mh-nav a:hover {text-decoration:underline;}
+.hero-wide {min-height:340px; padding:56px 48px; display:flex; flex-direction:column; justify-content:flex-end; color:#ffffff;}
+.hero-wide h1 {font-weight:900; text-transform:uppercase; font-size:clamp(2.4rem, 6vw, 4.8rem); line-height:.95; letter-spacing:-.02em; color:#ffffff; margin:0;}
+.hero-wide p {color:#e4e4e7; font-size:1.1rem; margin:12px 0 0; max-width:60ch;}
+#main {position:fixed !important; right:24px; bottom:100px; width:min(420px, calc(100vw - 48px)) !important; height:min(620px, 72vh) !important; z-index:1000; background:#ffffff; border-radius:20px; box-shadow:0 24px 60px -20px rgba(0,0,0,.45); border:1px solid #e4e4e7; overflow:auto; padding:14px !important;}
+#chat-launch {position:fixed !important; right:24px; bottom:24px; width:60px !important; min-width:60px !important; height:60px !important; border-radius:999px !important; z-index:1001; background:#0b0b0c !important; color:#ffffff !important; font-weight:700; box-shadow:0 12px 30px -10px rgba(0,0,0,.6); padding:0 !important;}
+
 """
 
 
@@ -443,6 +454,25 @@ def topbar_html(col) -> str:
 
 
 # ---------------------------------------------------------------- UI
+def header_html() -> str:
+    return (
+        "<header class='mh'><span class='mh-logo'>AskMoMA</span><nav class='mh-nav'>"
+        "<a href='https://www.moma.org/visit' target='_blank' rel='noopener'>Visit</a>"
+        "<a href='https://www.moma.org/calendar/exhibitions' target='_blank' rel='noopener'>Exhibitions</a>"
+        "<a href='https://www.moma.org/artists' target='_blank' rel='noopener'>Art and artists</a>"
+        "</nav></header>"
+    )
+
+
+def hero_html() -> str:
+    return (
+        f"<section class='hero-wide' style=\"{_bg_style()}\">"
+        "<h1>Welcome to AskMoMA</h1>"
+        "<p>Your guide to the art on view at The Museum of Modern Art. Ask a question, or pick a floor.</p>"
+        "</section>"
+    )
+
+
 def build_ui(bot):
     import gradio as gr
 
@@ -510,6 +540,9 @@ def build_ui(bot):
     with gr.Blocks(title="AskMoMA", fill_width=True, **({} if gradio6 else style)) as demo:
         hist = gr.State([])
         ctx = gr.State({})
+        open_state = gr.State(False)
+        gr.HTML(header_html())
+        gr.HTML(hero_html())
         with gr.Row(elem_id="shell", equal_height=True):
             with gr.Column(scale=0, min_width=272, elem_id="side"):
                 gr.HTML(
@@ -534,7 +567,7 @@ def build_ui(bot):
                     f"<a href='https://github.com/MuseumofModernArt/collection' target='_blank' rel='noopener'>GitHub dataset</a> "
                     f"(CC0), {_e(col.as_of)}.<br>Student project for MSAI-631. Not affiliated with MoMA.</div>"
                 )
-            with gr.Column(scale=1, elem_id="main"):
+            with gr.Column(scale=1, elem_id="main", visible=False) as main:
                 gr.HTML(topbar_html(col))
                 thread = gr.HTML(thread_html([]))
                 with gr.Column(elem_id="composer"):
@@ -558,15 +591,29 @@ def build_ui(bot):
                         value=True, label="Only list works that are on view", container=False
                     )
 
+        launch = gr.Button("Ask", elem_id="chat-launch")
+
+        def toggle(is_open):
+            return (not is_open), gr.update(visible=not is_open)
+
+        def show_chat():
+            return gr.update(visible=True)
+
+        launch.click(toggle, [open_state], [open_state, main], queue=False)
+
         outs = [thread, hist, ctx, *chips, *floor_btns]
         run = dict(fn=answer, inputs=[hist, ctx, on_view_only], outputs=outs)
-        msg.submit(add_user, [msg, hist], [msg, hist, thread], queue=False).then(**run)
+        msg.submit(add_user, [msg, hist], [msg, hist, thread], queue=False).then(show_chat, None, main).then(
+            **run
+        )
         for b in chips + starter_btns:
-            b.click(add_user, [b, hist], [msg, hist, thread], queue=False).then(**run)
+            b.click(add_user, [b, hist], [msg, hist, thread], queue=False).then(show_chat, None, main).then(
+                **run
+            )
         for f, b in zip(floors, floor_btns, strict=True):
             b.click(
                 functools.partial(add_user, f"What's on floor {f}?"), [hist], [msg, hist, thread], queue=False
-            ).then(**run)
+            ).then(show_chat, None, main).then(**run)
         new_chat.click(reset, None, outs)
     demo.askmoma_launch_kwargs = style if gradio6 else {}
     return demo
