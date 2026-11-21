@@ -1,0 +1,8 @@
+# AskMoMA. Python 3.10+.
+pandas>=2.0
+gradio>=5
+pytest>=8
+# Added as the later use cases are built:
+# sentence-transformers   (embeddings: all-MiniLM-L6-v2)
+# faiss-cpu               (vector search)
+# transformers            (optional small LLM: Qwen2.5-1.5B-Instruct or SmolLM2-360M-Instruct)

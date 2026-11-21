@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# The full MoMA download (about 75 MB): rebuilt by scripts/fetch_data.py
+data/raw/
+
+# Gradio and editors
+.gradio/
+.vscode/
+.idea/
+.DS_Store
+
+# Secrets: none are needed, but never commit them
+.env
