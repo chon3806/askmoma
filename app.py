@@ -430,7 +430,7 @@ def works_html(cards: list[dict], limit: int = 6) -> str:
 
 def thread_html(history: list) -> str:
     if not history:
-        return f"<div class='thread'><div class='inner'>{welcome_html()}</div></div>"
+        return f"<div class='thread' role='log' aria-live='polite' aria-label='Conversation with AskMoMA'><div class='inner'>{welcome_html()}</div></div>"
     rows = []
     for q, a, cards in history:
         rows.append(f"<div class='row-u'><div class='bubble'>{_e(q)}</div></div>")
@@ -440,7 +440,11 @@ def thread_html(history: list) -> str:
             else "<div class='card'><span class='typing' aria-label='Working'><i></i><i></i><i></i></span></div>"
         )
         rows.append(f"<div class='row-a'><div class='avatar'>A</div><div class='ans'>{body}</div></div>")
-    return "<div class='thread'><div class='inner'>" + "".join(rows) + "</div></div>"
+    return (
+        "<div class='thread' role='log' aria-live='polite' aria-label='Conversation with AskMoMA'><div class='inner'>"
+        + "".join(rows)
+        + "</div></div>"
+    )
 
 
 def topbar_html(col) -> str:
@@ -551,6 +555,7 @@ def build_ui(bot):
                         chips = [gr.Button(visible=False, size="sm") for _ in range(N_CHIPS)]
                     msg = gr.Textbox(
                         elem_id="ask",
+                        label="Your question",  # announced by screen readers even though it is not shown
                         placeholder="Ask about an artwork, an artist, or your visit",
                         show_label=False,
                         container=False,
