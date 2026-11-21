@@ -184,6 +184,31 @@ def is_exact_artist(col: Collection, tokens: list[str], span: tuple[int, int] | 
     return bool(span) and " ".join(tokens[span[0] : span[1]]) in col.artist_index
 
 
+_DISLIKE = re.compile(r"\b(but not|not|except|apart from|didn t like|did not like|disliked|hated)\b")
+
+
+def split_preferences(col: Collection, text: str) -> tuple[list[list[int]], list[list[int]]]:
+    """Works the visitor liked and disliked: "I loved A and B, but not C" -> ([A, B], [C]).
+
+    Each entry is the candidate rows for one title. Titles are taken longest
+    first, so a title containing "and" ("I and the Village") stays whole.
+    """
+    tokens = norm(text).split()
+    m = _DISLIKE.search(" ".join(tokens))
+    cut = len(" ".join(tokens)[: m.start()].split()) if m else len(tokens)
+
+    def titles(part: list[str]) -> list[list[int]]:
+        found = []
+        while True:
+            rows, span = find_title(col, part)
+            if not rows:
+                return [r for _, r in sorted(found)]  # in the order they were written
+            found.append((span[0], rows))
+            part = part[: span[0]] + ["|"] * (span[1] - span[0]) + part[span[1] :]
+
+    return titles(tokens[:cut]), titles(tokens[cut:])
+
+
 def _names_a_work(col: Collection, tokens: list[str]) -> bool:
     """True when the message contains a title of two or more content words."""
     rows, span = find_title(col, tokens)

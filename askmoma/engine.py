@@ -12,12 +12,18 @@ import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from . import config
 from .data import Collection, norm
-from .nlu import DESCRIPTIVE, Parsed, parse
+from .nlu import DESCRIPTIVE, Parsed, parse, split_preferences
 from .search import Searcher
+
+# Recommendations, from the week 11 recommender (CineMatch):
+DISLIKE_WEIGHT = 0.5  # Rocchio: how far a disliked work pushes the profile away
+MMR_LAMBDA = 0.7  # maximal marginal relevance: 1 = only relevance, 0 = only variety
+NONE_OF_THESE = {"none of these", "none", "neither", "none of them", "not these"}
 
 FAQ = json.loads((Path(__file__).parent / "faq.json").read_text(encoding="utf-8"))
 
@@ -92,8 +98,23 @@ class AskMoMA:
             cards=[self._card(r) for r in rows],
             suggestions=[
                 f"Tell me about {self._card(r)['title']} by {self._card(r)['artist']}" for r in rows[:3]
-            ],
+            ]
+            + ["None of these"],  # a way out when the guess is wrong (CUX Guide repair)
             intent="disambiguate",
+            context={"choices": [int(r) for r in rows]},
+        )
+
+    def _none_of_these(self, context: dict) -> Answer:
+        title = self._card(context["choices"][0])["title"]
+        return Answer(
+            text=(
+                f"Sorry, none of those. Which **{title}** do you mean? Tell me the artist or the year, "
+                f"for example *{title} by* followed by the artist's name. You can also search "
+                f"[moma.org]({config.MOMA_HOME}/collection/)."
+            ),
+            suggestions=["What can you do?"],
+            intent="clarify",
+            context={k: v for k, v in context.items() if k != "choices"},
         )
 
     def _filter(self, df: pd.DataFrame, floor: int | None, on_view_only: bool) -> pd.DataFrame:
@@ -117,6 +138,8 @@ class AskMoMA:
         link = re.match(r"^MoMA link for (.+?)(?: on floor (\d+))?$", message)
         if link:
             return self._artist_link(link.group(1), int(link.group(2)) if link.group(2) else None)
+        if norm(message) in NONE_OF_THESE and (context or {}).get("choices"):
+            return self._none_of_these(context)
         p = parse(self.col, message, context)
         handler = getattr(self, f"_h_{p.intent}", None)
         work_intents = {
@@ -149,6 +172,8 @@ class AskMoMA:
             if cids:
                 new_ctx["artist_cid"] = cids[0]
         ans.context = {**(context or {}), **new_ctx}
+        if ans.intent != "disambiguate":
+            ans.context.pop("choices", None)  # "None of these" only answers the question just asked
         return ans
 
     # ------------------------------------------------------------ FAQ
@@ -292,43 +317,51 @@ class AskMoMA:
 
     # ------------------------------------------------------------ recommendations
     def _h_recommend(self, p, floor_filter=None, **_):
+        liked, disliked = split_preferences(self.col, p.text)
+        if len(liked) >= 2 or (liked and disliked):
+            return self._recommend_from_profile(liked, disliked, floor_filter)
         row, ambiguous = self._single(p)
         if ambiguous:
             return ambiguous
         works = self.col.works
         seed = works.loc[row]
         on_view = works[works["on_view"] & (works.index != row)]
+        seed_vec = self.search.vector(row)
         picks: list[tuple[int, str]] = []
-        seen = set()
+        seen, artists = set(), set()
 
-        def add(rows, reason, limit):
+        def add(rows, reason, limit, same_artist_ok=False):
             for r in rows:
-                if r not in seen and len([1 for _, why in picks if why == reason]) < limit:
-                    seen.add(r)
-                    picks.append((r, reason))
+                if len([1 for _, why in picks if why == reason]) >= limit:
+                    return
+                artist = works.at[r, "Artist"]
+                # Variety: one work per artist, except when the reason is the artist.
+                if r in seen or (artist in artists and not same_artist_ok):
+                    continue
+                seen.add(r)
+                artists.add(artist)
+                picks.append((r, reason))
 
         if seed["gallery"]:
-            add(
-                on_view[on_view["gallery"] == seed["gallery"]].index,
-                f"In the same gallery ({seed['gallery']})",
-                3,
-            )
+            same_gallery = on_view[on_view["gallery"] == seed["gallery"]].index
+            add(self._by_similarity(seed_vec, same_gallery), f"In the same gallery ({seed['gallery']})", 3)
         for cid in seed["cids"]:
             add(
                 [r for r in self.col.works_by_artist.get(cid, []) if r in on_view.index],
                 f"Also by {self._artist_name(cid)}",
                 2,
+                same_artist_ok=True,
             )
         if seed["year"]:
             near = on_view[(on_view["year"] - seed["year"]).abs() <= 10]
             if _clean(seed["Classification"]):
                 near = near[near["Classification"] == seed["Classification"]]
             add(
-                near.sort_values("year").index,
+                self._by_similarity(seed_vec, near.index),
                 f"Same period ({int(seed['year']) - 10}–{int(seed['year']) + 10})",
                 2,
             )
-        for r, _score in self.search.similar_to(row, k=6):
+        for r, _score in self.search.similar_to(row, k=12):
             if r in on_view.index:
                 add([r], "Similar in subject or style", 2)
 
@@ -343,15 +376,92 @@ class AskMoMA:
                 cards=[c],
                 context={"work_row": row},
             )
+        return self._recommendation_answer(f"If you liked **{c['title']}**, try these:", picks, [row], row)
+
+    def _by_similarity(self, vec, rows) -> list[int]:
+        """``rows`` ordered by similarity to ``vec`` (unchanged if there is no vector)."""
+        if vec is None:
+            return list(rows)
+        scored = [(float(v @ vec) if (v := self.search.vector(r)) is not None else 0.0, r) for r in rows]
+        return [r for _, r in sorted(scored, key=lambda x: -x[0])]
+
+    def _recommend_from_profile(self, liked_rows, disliked_rows, floor_filter=None) -> Answer:
+        """Several likes and dislikes, as in the week 11 recommender: a Rocchio profile
+        (mean of liked works minus half the mean of disliked ones), then maximal
+        marginal relevance so the list is not ten near-copies."""
+        works = self.col.works
+
+        def one(rows):  # the work on view, if the title is shared
+            return next((r for r in rows if works.at[r, "on_view"]), rows[0])
+
+        liked, disliked = [one(r) for r in liked_rows], [one(r) for r in disliked_rows]
+        vecs = {r: self.search.vector(r) for r in liked + disliked}
+        liked_v = [vecs[r] for r in liked if vecs[r] is not None]
+        if not liked_v:
+            return self._h_unknown(Parsed(text="", intent="unknown"))
+        profile = np.mean(liked_v, axis=0)
+        disliked_v = [vecs[r] for r in disliked if vecs[r] is not None]
+        if disliked_v:
+            profile = profile - DISLIKE_WEIGHT * np.mean(disliked_v, axis=0)
+        profile = profile / (np.linalg.norm(profile) or 1.0)
+
+        # Leave out the works named, and other panels of them (Monet made several "Water Lilies").
+        named = {(works.at[r, "title_norm"], works.at[r, "Artist"]) for r in liked + disliked}
+        same = works["title_norm"].isin({t for t, _ in named}) & works["Artist"].isin({a for _, a in named})
+        exclude = set(liked) | set(disliked) | set(works.index[same])
+        candidates = [
+            (r, s) for r, s in self.search.rank(profile, k=40, exclude=exclude) if works.at[r, "on_view"]
+        ]
+        if floor_filter:
+            candidates = [(r, s) for r, s in candidates if works.at[r, "floor"] == floor_filter] or candidates
+        chosen = self._mmr(candidates, n=6)
+
+        picks = []
+        for r in chosen:
+            v = self.search.vector(r)
+            closest = max(liked, key=lambda lr: float(v @ vecs[lr]) if vecs[lr] is not None else -1.0)
+            picks.append((r, f"Close to {self._card(closest)['title']}"))
+        names = [f"**{self._card(r)['title']}**" for r in liked]
+        intro = "Because you liked " + (
+            " and ".join(names) if len(names) < 3 else ", ".join(names[:-1]) + f", and {names[-1]}"
+        )
+        if disliked:
+            intro += ", but not " + " or ".join(f"**{self._card(r)['title']}**" for r in disliked)
+        if not picks:
+            return Answer(text=intro + ", I couldn't find other works on view to suggest." + self._as_of())
+        return self._recommendation_answer(intro + ", try these:", picks, liked, liked[0], disliked)
+
+    def _mmr(self, candidates: list[tuple[int, float]], n: int) -> list[int]:
+        """Maximal marginal relevance: each pick balances relevance against similarity to earlier picks."""
+        vecs = {r: self.search.vector(r) for r, _ in candidates}
+        chosen: list[int] = []
+        pool = [(r, s) for r, s in candidates if vecs[r] is not None]
+        while pool and len(chosen) < n:
+
+            def gain(item):
+                r, s = item
+                overlap = max((float(vecs[r] @ vecs[c]) for c in chosen), default=0.0)
+                return MMR_LAMBDA * s - (1 - MMR_LAMBDA) * overlap
+
+            best = max(pool, key=gain)
+            chosen.append(best[0])
+            pool.remove(best)
+        return chosen
+
+    def _recommendation_answer(self, intro, picks, liked, focus, disliked=()) -> Answer:
         lines = "\n".join(f"- {self._work_line(r)} — *{why}*" for r, why in picks)
+        first = self._card(picks[0][0])["title"]
+        seed = " and ".join(self._card(r)["title"] for r in liked[:2])
         return Answer(
-            text=f"If you liked **{c['title']}**, try these:\n\n{lines}" + self._as_of(),
+            text=f"{intro}\n\n{lines}" + self._as_of(),
             cards=[self._card(r, why) for r, why in picks],
-            suggestions=[
-                f"Where is {self._card(picks[0][0])['title']}?",
-                f"Tell me about {self._card(picks[0][0])['title']}",
-            ],
-            context={"work_row": row},
+            # Feedback, as in the week 11 recommender: refine the list from here.
+            suggestions=[f"Where is {first}?", f"More like {first}", f"I loved {seed} but not {first}"],
+            context={
+                "work_row": focus,
+                "liked": [int(r) for r in liked],
+                "disliked": [int(r) for r in disliked],
+            },
         )
 
     # ------------------------------------------------------------ artists

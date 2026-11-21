@@ -48,9 +48,10 @@ class Searcher:
         if corpus.empty:  # no OnView data: search the whole collection instead
             corpus = works
         self.rows = corpus.index.to_numpy()
+        self._position = {int(r): i for i, r in enumerate(self.rows)}  # collection row -> corpus position
         self.docs = [_doc(w) for _, w in corpus.iterrows()]
         self.backend = "none"
-        self._model = self._index = self._tfidf = self._matrix = None
+        self._model = self._index = self._tfidf = self._matrix = self._emb = None
         if self.docs:
             self._build(backend)
 
@@ -76,6 +77,7 @@ class Searcher:
 
         self._model = SentenceTransformer(config.EMBED_MODEL, device="cpu")
         emb = self._cached_embeddings()
+        self._emb = emb  # kept for profiles and variety (1,556 x 384 floats, about 2 MB)
         try:
             import faiss
         except ImportError:  # sentence-transformers without FAISS: brute force in NumPy
@@ -144,6 +146,42 @@ class Searcher:
         # TF-IDF scores run lower than cosine similarity between embeddings.
         floor = min_score if self.backend != "tfidf" else min_score * 0.3
         return [(r, s) for r, s in pairs if s > max(floor, 0.0)]
+
+    # ---------------------------------------------------------------- vectors
+    def vector(self, row: int) -> np.ndarray | None:
+        """The unit-length vector for the work at ``row`` (a stored one if it is in the corpus)."""
+        if self.backend == "none":
+            return None
+        pos = self._position.get(int(row))
+        if self._emb is not None:
+            vec = self._emb[pos] if pos is not None else self._encode(_doc(self.col.works.loc[row]))[0]
+        else:
+            src = (
+                self._matrix[pos]
+                if pos is not None
+                else self._tfidf.transform([_doc(self.col.works.loc[row])])
+            )
+            vec = np.asarray(src.todense()).ravel()
+        norm = float(np.linalg.norm(vec))
+        return (vec / norm).astype("float32") if norm else None
+
+    def rank(self, vec: np.ndarray, k: int = 30, exclude: set[int] = frozenset()) -> list[tuple[int, float]]:
+        """Corpus works most similar to ``vec`` (cosine), best first, skipping ``exclude``."""
+        if self.backend == "none" or vec is None:
+            return []
+        if self._emb is not None:
+            scores = self._emb @ vec
+        else:
+            scores = np.asarray(self._matrix @ vec).ravel()
+        order = np.argsort(-scores)
+        out = []
+        for i in order:
+            row = int(self.rows[i])
+            if row not in exclude and scores[i] > 0:
+                out.append((row, float(scores[i])))
+                if len(out) == k:
+                    break
+        return out
 
     def similar_to(self, row: int, k: int = 6) -> list[tuple[int, float]]:
         """Works most like the one at ``row``, excluding it."""

@@ -85,12 +85,13 @@ seconds longer; `HuggingFaceTB/SmolLM2-360M-Instruct` is the lighter choice.
 | Works by an artist | What works by Frida Kahlo are on view? / Show me paintings by Picasso |
 | About an artist | Who was Piet Mondrian? |
 | Recommendations | I loved The Starry Night. What else should I see? |
+| Several likes and dislikes | I loved The Starry Night and Water Lilies, but not The Persistence of Memory |
 | Rank artists | Which artists have the most works on floor 5? |
 | What's on a floor / gallery | What's on floor 4? / What's in gallery 501? |
 | By nationality | Which Japanese artists are on view? |
 | Search by description | Find dreamy night sky paintings |
 | Follow-ups | Where is it? / What else did they make? |
-| Same title, many works | Tell me about Untitled → asks which one |
+| Same title, many works | Tell me about Untitled → asks which one; "None of these" → asks for the artist or year |
 | Visitor FAQ | Hours, admission, accessibility, address |
 | No answer | Says so and links to moma.org |
 
