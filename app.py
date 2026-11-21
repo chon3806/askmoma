@@ -209,6 +209,21 @@ footer {display:none !important;}
 #ask {border-radius:999px !important; padding-left:18px !important;}
 #ask button {background:#0b0b0c !important; color:#ffffff !important; border-radius:999px !important;}
 button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
+/* ---- polish: sidebar, header, hero ---- */
+#side .sec {font-size:.72rem !important; letter-spacing:.08em; text-transform:uppercase; color:#6b7280 !important; font-weight:600; padding:0 12px; margin-top:18px;}
+#side button:not(#newchat) {border-radius:12px !important; padding:9px 12px !important; font-size:.92rem !important; font-weight:500 !important;}
+#side button:not(#newchat):hover {box-shadow:inset 3px 0 0 #0b0b0c !important;}
+#side #newchat {box-shadow:0 8px 18px -10px rgba(11,11,12,.6);}
+.topbar {padding:14px 28px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.7); backdrop-filter:blur(8px);}
+.topbar .t {font-family:var(--display); font-size:1.35rem; font-weight:400; letter-spacing:-.01em; color:#0b0b0c;}
+.topbar .t small {font-family:inherit; font-size:.85rem;}
+.status {border:1px solid var(--line); border-radius:999px; padding:6px 14px; box-shadow:0 1px 2px rgba(15,23,42,.06);}
+.welcome {box-shadow:0 30px 60px -40px rgba(15,23,42,.35);}
+.welcome .cap {box-shadow:0 12px 28px -20px rgba(15,23,42,.45);}
+.featured .art {transition:transform .18s ease, box-shadow .18s ease;}
+.featured .art:hover {transform:translateY(-3px); box-shadow:0 18px 36px -20px rgba(15,23,42,.5);}
+.featured .art img {height:220px;}
+
 """
 
 
