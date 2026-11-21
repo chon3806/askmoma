@@ -334,6 +334,22 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 #chatnav {position:sticky !important; bottom:-14px; margin:14px -14px -14px !important; padding:8px 10px !important; gap:8px !important; background:#ffffff; border-top:1px solid #e4e4e7; z-index:2;}
 #chatnav button {flex:1 1 0 !important; border-radius:12px !important; font-weight:600 !important; min-height:42px;}
 
+/* ---- chat thread: compact, WhatsApp-style, newest message at the bottom ---- */
+#chatpanel .thread {height:300px !important; min-height:0 !important; flex-direction:column !important; padding:0 4px !important; overflow-y:auto;}
+#chatpanel .thread .inner {gap:6px !important; padding:8px 0 !important; max-width:none !important;}
+#chatpanel .row-u .bubble {font-size:.88rem !important; padding:7px 11px !important; max-width:82% !important; border-radius:14px 14px 3px 14px !important;}
+#chatpanel .row-a {gap:8px !important;}
+#chatpanel .avatar {flex:0 0 24px !important; height:24px !important; font-size:.75rem; border-radius:50% !important;}
+#chatpanel .ans .card {font-size:.88rem !important; line-height:1.4 !important; padding:7px 11px !important; border-radius:3px 14px 14px 14px !important; max-width:92%;}
+#chatpanel .ans .card p {margin:0 0 4px !important;}
+#chatpanel .ans .card .asof {font-size:.7rem !important; margin-top:6px !important; padding-top:5px !important;}
+#chatpanel .ans .card li {margin-bottom:2px !important;}
+#chatpanel .inner > .row-u + .row-a, #chatpanel .inner > .row-a + .row-u {margin-top:2px;}
+#chatpanel #chips {margin-top:2px !important;}
+#chatpanel #chips button {font-size:.78rem !important; padding:4px 10px !important;}
+#chatpanel #ask textarea {font-size:.9rem !important;}
+
+
 
 /* ---- accessibility: text contrast (WCAG 2.2 SC 1.4.3, at least 4.5:1) ----
    The refresh made the sidebar white and the header black; these rules still
@@ -503,9 +519,7 @@ def thread_html(history: list) -> str:
     if not history:
         greeting = (
             "<div class='row-a'><div class='avatar'>A</div><div class='ans'><div class='card'>"
-            "<p>Hi! I'm AskMoMA. I can tell you where a work is, who made it, what else an artist "
-            "made, and what to see next.</p>"
-            "<p>Try one of the questions below, or pick a floor on the page.</p></div></div></div>"
+            "<p>Hi! Ask about a work, an artist, or a floor.</p></div></div></div>"
         )
         return (
             "<div class='thread' role='log' aria-live='polite' aria-label='Conversation with AskMoMA'>"
@@ -623,6 +637,26 @@ def footer_html(col) -> str:
         "</ul></div>"
         "</div>"
     )
+
+
+# Keeps the chat on the newest message: whenever a thread's content changes, scroll it to the bottom.
+SCROLL_JS = """
+() => {
+  if (window.__askmomaScroll) return;
+  window.__askmomaScroll = true;
+  const last = new WeakMap();
+  const pin = () => {
+    document.querySelectorAll('.thread').forEach((t) => {
+      const n = t.innerHTML.length;
+      if (last.get(t) !== n) {
+        last.set(t, n);
+        t.scrollTop = t.scrollHeight;
+      }
+    });
+  };
+  new MutationObserver(pin).observe(document.body, {childList: true, subtree: true});
+}
+"""
 
 
 def build_ui(bot):
@@ -794,6 +828,7 @@ def build_ui(bot):
                 functools.partial(add_user, f"What's on floor {f}?"), [hist], [msg, hist, thread], queue=False
             ).then(open_messages, None, [panel, *pane_outs], queue=False).then(**run)
         new_chat.click(reset, None, outs)
+        demo.load(None, None, None, js=SCROLL_JS)
     demo.askmoma_launch_kwargs = style if gradio6 else {}
     return demo
 

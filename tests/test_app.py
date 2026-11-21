@@ -54,4 +54,4 @@ def test_conversation_is_a_live_region_and_escapes_the_question():
 
 def test_empty_conversation_shows_the_greeting():
     html = app.thread_html([])
-    assert "I'm AskMoMA" in html and "role='log'" in html
+    assert "Ask about a work" in html and "role='log'" in html
