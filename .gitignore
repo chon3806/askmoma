@@ -16,3 +16,4 @@ data/raw/
 
 # Secrets: none are needed, but never commit them
 .env
+*.part

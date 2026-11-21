@@ -13,5 +13,7 @@ Decisions the team researches and records as the project goes. Each entry says w
 
 | Date | Decision | Why | Source |
 | --- | --- | --- | --- |
-| 2026-11-21 | Use MoMA's official GitHub data, not the Kaggle copy | Official, CC0, and updated 2026-11-17; the Kaggle copy is an older snapshot | https://github.com/MuseumofModernArt/collection |
+| 2026-11-21 | Use MoMA's official GitHub data, not the Kaggle copy | Same two files (Artworks.csv, Artists.csv) and the same CC0 license, but the official repository was updated 2026-11-17, while Kaggle's `momanyc/museum-collection` was last updated 2017-02-15 (version 1), so its gallery locations are out of date | https://github.com/MuseumofModernArt/collection ; https://www.kaggle.com/datasets/momanyc/museum-collection |
+| 2026-11-21 | Commit only `data/on_view.csv`; download the full files on demand | Artworks.csv is about 70 MB, which would slow every clone; the on-view table is 0.6 MB and rebuilt by `mise run data` | `src/askmoma/data/fetch.py` |
+| 2026-11-21 | Python 3.12 with uv and mise | One pinned interpreter and a lock file, so every member runs the same versions | `mise.toml`, `uv.lock` |
 | 2026-11-21 | Answers come only from the data, with a moma.org link | A location must be traceable; nothing is generated | Proposal, "Scope, Risks, and Evaluation" |

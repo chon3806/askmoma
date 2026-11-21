@@ -1,0 +1,43 @@
+# AskMoMA toolchain and tasks.
+#
+# mise pins the same Python and uv for every team member. uv installs the
+# project's libraries from uv.lock into .venv, so everyone runs the same versions.
+# Install mise from https://mise.jdx.dev, then in this folder run:
+#
+#   mise install       # Python 3.12 and uv
+#   mise run setup     # install the project and its dev tools into .venv
+#   mise run app       # start the chat page
+#
+# Without mise, the same commands work with uv alone (see README.md).
+
+[tools]
+python = "3.12"
+uv = "0.11"
+
+[tasks.setup]
+description = "Install the project and dev tools into .venv (from uv.lock)"
+run = "uv sync"
+
+[tasks.data]
+description = "Download MoMA's open data and rebuild data/on_view.csv"
+run = "uv run python -m askmoma.data.fetch"
+
+[tasks.app]
+description = "Start the AskMoMA chat page"
+run = "uv run askmoma"
+
+[tasks.test]
+description = "Run the tests"
+run = "uv run pytest"
+
+[tasks.lint]
+description = "Check style and common errors with ruff"
+run = ["uv run ruff check .", "uv run ruff format --check ."]
+
+[tasks.fmt]
+description = "Fix formatting and auto-fixable lint issues"
+run = ["uv run ruff format .", "uv run ruff check --fix ."]
+
+[tasks.check]
+description = "Everything CI runs: lint, then tests"
+depends = ["lint", "test"]

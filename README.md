@@ -16,46 +16,67 @@ Group 4 project for MSAI-631-M80, *Artificial Intelligence for Human-Computer In
 | 4. Search by description (sentence embeddings) | *dreamy night-sky paintings* | To do |
 | Visitor FAQ (hours, admission, accessibility), written from moma.org with source links | *What time does MoMA open?* | To do |
 
-Optional after the core: a small open language model (Qwen2.5-1.5B-Instruct or SmolLM2-360M-Instruct) to phrase answers and read complex requests, answering only from the retrieved records. No OpenAI or paid services.
+The model and the detailed design are being researched as the project goes; see [docs/design-notes.md](docs/design-notes.md).
 
-## Running it
+## Getting started
 
-Python 3.10 or later.
-
-```bash
-pip install -r requirements.txt
-python scripts/fetch_data.py
-python app.py
-```
-
-`fetch_data.py` downloads MoMA's open data (about 75 MB, kept out of Git in `data/raw/`) and writes `data/on_view.csv`, the 1,556 works currently listed as on view. `data/on_view.csv` is already committed, so the app also runs without this step.
-
-Tests:
+The toolchain is pinned with [mise](https://mise.jdx.dev) (Python 3.12 and [uv](https://docs.astral.sh/uv/)), and the libraries are locked in `uv.lock`, so everyone runs the same versions.
 
 ```bash
-python -m pytest tests -q
+mise install        # Python 3.12 and uv
+mise run setup      # install AskMoMA and the dev tools into .venv
+mise run app        # start the chat page, then open the address it prints
 ```
 
-## Layout
-
-| Path | Contents |
+| Task | What it does |
 | --- | --- |
-| `app.py` | The Gradio chat page |
-| `src/askmoma/locate.py` | Use case 1: finding a work and its location |
-| `scripts/fetch_data.py` | Downloads MoMA's data and builds `data/on_view.csv` |
-| `data/SOURCE.md` | Which version of MoMA's data is used, and when it was downloaded |
-| `docs/design-notes.md` | Open questions and design decisions, recorded as the team researches them |
-| `tests/` | Tests, run with pytest |
+| `mise run setup` | Install the project and dev tools from `uv.lock` |
+| `mise run app` | Start the chat page |
+| `mise run test` | Run the tests |
+| `mise run lint` | Check style and common errors (ruff) |
+| `mise run fmt` | Fix formatting |
+| `mise run check` | Lint and test, the same as CI |
+| `mise run data` | Re-download MoMA's data and rebuild `data/on_view.csv` |
+
+**Without mise**, install [uv](https://docs.astral.sh/uv/getting-started/installation/) and use the same commands directly: `uv sync`, `uv run askmoma`, `uv run pytest`, `uv run ruff check .`.
+
+## Project structure
+
+```
+askmoma/
+├── mise.toml                  toolchain pin and tasks
+├── pyproject.toml             package metadata, dependencies, pytest and ruff settings
+├── uv.lock                    exact library versions
+├── src/askmoma/
+│   ├── config.py              paths and constants
+│   ├── data/
+│   │   ├── fetch.py           downloads MoMA's data, builds data/on_view.csv
+│   │   └── collection.py      loads the works on view; title lookup
+│   ├── features/              one module per use case
+│   │   └── locate.py          use case 1: where is a work?
+│   ├── chat/router.py         decides which feature answers a message
+│   └── ui/app.py              the Gradio chat page
+├── data/
+│   ├── on_view.csv            the 1,556 works on view (committed)
+│   ├── SOURCE.md              which version of MoMA's data, downloaded when
+│   └── raw/                   full Artworks.csv and Artists.csv (not committed)
+├── docs/design-notes.md       open questions and decisions, with sources
+├── tests/                     pytest
+└── .github/workflows/ci.yml   lint and tests on every push and pull request
+```
+
+**Adding a use case:** create a module in `src/askmoma/features/` that takes the `Collection` and the message and returns an `Answer`, add a route for it in `src/askmoma/chat/router.py`, and add tests in `tests/`.
 
 ## Working together
 
-- Work on a branch named after the feature, such as `feature/rank-artists`, and open a pull request into `main`.
-- Another member reviews and merges each pull request.
-- Run the tests before pushing.
+- Create a branch for each piece of work, such as `feature/rank-artists`, and open a pull request into `main`.
+- CI runs the lint and tests on every pull request; another member reviews and merges.
+- Run `mise run check` before pushing.
+- Record design decisions, with their sources, in `docs/design-notes.md`.
 - Never commit API keys or passwords; none are needed.
 
 ## Data and credits
 
-- Collection data: The Museum of Modern Art (MoMA) collection data, https://github.com/MuseumofModernArt/collection, CC0 1.0. Gallery locations change, so each answer links to moma.org for the latest.
-- Interface: Gradio (Abid et al., 2019).
+- **Collection data:** The Museum of Modern Art (MoMA) collection data, https://github.com/MuseumofModernArt/collection, CC0 1.0. `mise run data` downloads both files, `Artworks.csv` and `Artists.csv`. Only the works listed as on view are committed, in `data/on_view.csv`. The Kaggle dataset `momanyc/museum-collection` contains the same two files but was last updated in February 2017, so its gallery locations are out of date; we use MoMA's official repository instead.
+- **Interface:** Gradio (Abid et al., 2019).
 - AskMoMA is an independent course project. It is not affiliated with or endorsed by The Museum of Modern Art.

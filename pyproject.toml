@@ -1,0 +1,45 @@
+[project]
+name = "askmoma"
+version = "0.1.0"
+description = "A conversational guide to the art on view at the Museum of Modern Art (MSAI-631-M80 Group 4)"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Dipu Biswas" },
+    { name = "Heman Chongbang Limbu" },
+    { name = "Sarina Tamang" },
+    { name = "Soham Nitin Ghorpade" },
+    { name = "Xinran Peng" },
+]
+dependencies = [
+    "pandas>=2.0",
+    "gradio>=5",
+]
+
+[project.scripts]
+askmoma = "askmoma.ui.app:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/askmoma"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, import order, modern syntax, and common bugs.
+select = ["E", "F", "I", "UP", "B"]
