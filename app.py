@@ -267,6 +267,15 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
   .featured .art img {height:240px !important;}
 }
 
+/* ---- accessibility: text contrast (WCAG 2.2 SC 1.4.3, at least 4.5:1) ----
+   The refresh made the sidebar white and the header black; these rules still
+   assumed the old dark sidebar and light header. Colors reuse the theme's own. */
+#side .brand .name {color:#0b0b0c !important;}
+#side .brand .sub {color:#5b6470 !important;}
+#side button.primary {background:#e4e4e7 !important; color:#0b0b0c !important; box-shadow:inset 3px 0 0 #0b0b0c !important;}
+.avatar {background:#0b0b0c !important; color:#ffffff !important;}
+.status span {color:#d4d4d8 !important;}
+.fine {color:#5b6470 !important;}
 """
 
 
@@ -421,7 +430,7 @@ def works_html(cards: list[dict], limit: int = 6) -> str:
 
 def thread_html(history: list) -> str:
     if not history:
-        return f"<div class='thread'><div class='inner'>{welcome_html()}</div></div>"
+        return f"<div class='thread' role='log' aria-live='polite' aria-label='Conversation with AskMoMA'><div class='inner'>{welcome_html()}</div></div>"
     rows = []
     for q, a, cards in history:
         rows.append(f"<div class='row-u'><div class='bubble'>{_e(q)}</div></div>")
@@ -431,7 +440,11 @@ def thread_html(history: list) -> str:
             else "<div class='card'><span class='typing' aria-label='Working'><i></i><i></i><i></i></span></div>"
         )
         rows.append(f"<div class='row-a'><div class='avatar'>A</div><div class='ans'>{body}</div></div>")
-    return "<div class='thread'><div class='inner'>" + "".join(rows) + "</div></div>"
+    return (
+        "<div class='thread' role='log' aria-live='polite' aria-label='Conversation with AskMoMA'><div class='inner'>"
+        + "".join(rows)
+        + "</div></div>"
+    )
 
 
 def topbar_html(col) -> str:
@@ -542,6 +555,7 @@ def build_ui(bot):
                         chips = [gr.Button(visible=False, size="sm") for _ in range(N_CHIPS)]
                     msg = gr.Textbox(
                         elem_id="ask",
+                        label="Your question",  # announced by screen readers even though it is not shown
                         placeholder="Ask about an artwork, an artist, or your visit",
                         show_label=False,
                         container=False,
