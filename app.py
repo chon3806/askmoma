@@ -314,6 +314,12 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .site-footer a {color:#0b0b0c; font-weight:600;}
 @media (max-width: 760px) {.site-footer {grid-template-columns:1fr;}}
 
+/* ---- chat popup header and close button ---- */
+#chat-head {display:flex !important; justify-content:space-between; align-items:center; margin:0 0 4px !important;}
+.chat-title {font-weight:800; font-size:1.05rem; color:#0b0b0c; letter-spacing:-.01em;}
+#chat-close {min-width:36px !important; max-width:36px !important; height:36px !important; padding:0 !important; border-radius:999px !important; background:#f4f4f5 !important; color:#0b0b0c !important; font-weight:700 !important; border:1px solid #e4e4e7 !important;}
+#chat-close:hover {background:#e4e4e7 !important;}
+
 """
 
 
@@ -657,6 +663,9 @@ def build_ui(bot):
                 ]
             gr.HTML(footer_html(col))
         with gr.Column(elem_id="chatpanel", visible=False) as panel:
+            with gr.Row(elem_id="chat-head"):
+                gr.HTML("<span class='chat-title'>AskMoMA</span>")
+                close_btn = gr.Button("✕", elem_id="chat-close", size="sm")
             with gr.Tabs(selected="home", elem_id="chattabs") as tabs:
                 with gr.Tab("Home", id="home"):
                     gr.HTML(home_html())
@@ -694,6 +703,9 @@ def build_ui(bot):
         def toggle(is_open):
             return (not is_open), gr.update(visible=not is_open)
 
+        def close_chat():
+            return False, gr.update(visible=False)
+
         def open_messages():
             return gr.update(visible=True), gr.update(selected="messages")
 
@@ -701,6 +713,7 @@ def build_ui(bot):
             return gr.update(selected="messages")
 
         launch.click(toggle, [open_state], [open_state, panel], queue=False)
+        close_btn.click(close_chat, None, [open_state, panel], queue=False)
         send_btn.click(go_messages, None, tabs, queue=False)
 
         outs = [thread, hist, ctx, *chips, *floor_btns]
