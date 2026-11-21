@@ -504,9 +504,8 @@ class AskMoMA:
         if p.floor:
             n_artists = df.explode("cids")["cids"].dropna().nunique()
             return Answer(
-                text=f"Floor {p.floor} has **{len(df)}** works on view by **{n_artists}** artists."
-                "\n\nDo you want to search for a specific artist, or see the top 5 artists on this floor?"
-                + self._as_of(),
+                text=f"Floor {p.floor}: **{len(df)}** works by **{n_artists}** artists.\n\n"
+                "Search an artist, or see the top 5?" + self._as_of(),
                 suggestions=[f"Which artists have the most work on floor {p.floor}?"],
             )
         return Answer(

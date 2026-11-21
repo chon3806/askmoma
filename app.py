@@ -302,6 +302,18 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .starter {justify-content:flex-start !important; text-align:left !important;}
 #chattabs {min-height:0;}
 
+/* ---- credits and footer ---- */
+.credit {display:block; font-size:.78rem; color:#71717a; font-style:normal; margin-top:6px; text-decoration:none;}
+.art em.credit a, a.credit {color:#52525b;}
+.hero-credit {color:#e4e4e7 !important; margin-top:14px; font-size:.85rem; text-decoration:underline;}
+.featured {margin-top:14px;}
+.site-footer {display:grid; grid-template-columns:1fr 1.4fr; gap:32px; margin-top:56px; padding:32px 0 8px; border-top:1px solid #e4e4e7; color:#3f3f46;}
+.site-footer b {color:#0b0b0c; font-size:1.05rem;}
+.site-footer p, .site-footer li {font-size:.92rem; line-height:1.6;}
+.site-footer ul {padding-left:18px; margin:8px 0 0;}
+.site-footer a {color:#0b0b0c; font-weight:600;}
+@media (max-width: 760px) {.site-footer {grid-template-columns:1fr;}}
+
 """
 
 
@@ -406,7 +418,8 @@ def featured_html() -> str:
     items = "".join(
         f"<a class='art' href='{_e(f['link'])}' target='_blank' rel='noopener'>"
         f"<img src='{_e(f['image'])}' alt='{_e(f['title'])}' loading='lazy'>"
-        f"<span><b>{_e(f['title'])}</b>{_e(f['artist'])}</span></a>"
+        f"<span><b>{_e(f['title'])}</b>{_e(f['artist'])}"
+        f"<em class='credit'>Image: MoMA &#8599;</em></span></a>"
         for f in _featured
     )
     return f"<div class='featured'>{items}</div>"
@@ -449,7 +462,9 @@ def works_html(cards: list[dict], limit: int = 6) -> str:
         why = f"<div class='why'>{_e(c['reason'])}</div>" if c.get("reason") else ""
         out.append(
             f"<a class='work' href='{_e(c['link'])}' target='_blank' rel='noopener'>{thumb}<div class='info'>"
-            f"<div class='ti'>{_e(c['title'])}</div><div class='ar'>{_e(c['artist'])}, {_e(c['date'])}</div>{tag}{why}</div></a>"
+            f"<div class='ti'>{_e(c['title'])}</div><div class='ar'>{_e(c['artist'])}, {_e(c['date'])}</div>{tag}{why}"
+            + ("<div class='credit'>Image: MoMA</div>" if img.startswith("http") else "")
+            + "</div></a>"
         )
     return "<div class='works'>" + "".join(out) + "</div>"
 
@@ -499,7 +514,13 @@ def hero_html() -> str:
         f"<section class='hero-wide' style=\"{_bg_style()}\">"
         "<h1>Welcome to AskMoMA</h1>"
         "<p>Your guide to the art on view at The Museum of Modern Art. Ask a question, or pick a floor.</p>"
-        "</section>"
+        + (
+            f"<a class='credit hero-credit' href='{_e(_featured[0]['link'])}' target='_blank' rel='noopener'>"
+            f"Image: {_e(_featured[0]['title'])}, MoMA &#8599;</a>"
+            if _featured
+            else ""
+        )
+        + "</section>"
     )
 
 
@@ -514,18 +535,9 @@ def about_html(col) -> str:
     cards = "".join(f"<div class='stat'><b>{n}</b><span>{label}</span></div>" for n, label in stats)
     return (
         f"<div class='stats'>{cards}</div>"
-        "<section class='about'>"
-        "<h2>About the collection</h2>"
-        "<p>The Museum of Modern Art in New York collects painting, sculpture, photography, architecture, "
-        "design, and more, from the late 1800s to today. This guide uses MoMA's public collection data to show "
-        "what is on view, who made it, and where to find it.</p>"
-        "<h3>How to explore</h3>"
-        "<ol><li>Pick a floor below to see what is on view there.</li>"
-        "<li>Ask about an artist, an artwork, or a recommendation.</li>"
-        "<li>Open the work or artist on moma.org to read more.</li></ol>"
-        "<p><a href='https://www.moma.org/visit' target='_blank' rel='noopener'>Plan your visit on moma.org</a> "
-        "for current hours, admission, and accessibility.</p>"
-        "</section>"
+        "<section class='about'><h2>About the collection</h2>"
+        "<p>MoMA's collection covers painting, sculpture, photography, architecture, design and more. "
+        "Pick a floor below, or ask a question in the chat.</p></section>"
     )
 
 
@@ -541,9 +553,22 @@ def home_html() -> str:
 
 def footer_html(col) -> str:
     return (
-        "<div class='sidefoot'>Collection data from MoMA's public "
-        "<a href='https://github.com/MuseumofModernArt/collection' target='_blank' rel='noopener'>GitHub dataset</a> "
-        f"(CC0), {_e(col.as_of)}. Student project for MSAI-631. Not affiliated with MoMA.</div>"
+        "<footer class='site-footer'>"
+        "<div><b>AskMoMA</b>"
+        "<p>A student project for MSAI-631 at the University of the Cumberlands. "
+        "Not affiliated with The Museum of Modern Art.</p>"
+        "<a href='https://github.com/chon3806/askmoma' target='_blank' rel='noopener'>View the code on GitHub &#8599;</a>"
+        "</div>"
+        "<div><b>References</b><ul>"
+        "<li>Artwork and artist data: MoMA public collection, CC0, "
+        "<a href='https://github.com/MuseumofModernArt/collection' target='_blank' rel='noopener'>GitHub dataset</a>"
+        f" (as of {_e(col.as_of)}).</li>"
+        "<li>Images and work pages: <a href='https://www.moma.org' target='_blank' rel='noopener'>moma.org</a>, "
+        "credited under each image.</li>"
+        "<li>Built with Gradio, pandas and scikit-learn.</li>"
+        "<li>Fonts: Inter and Instrument Serif (Google Fonts).</li>"
+        "</ul></div>"
+        "</footer>"
     )
 
 
@@ -618,8 +643,8 @@ def build_ui(bot):
         gr.HTML(header_html())
         gr.HTML(hero_html())
         with gr.Column(elem_id="body"):
-            gr.HTML(welcome_html())
             gr.HTML(about_html(col))
+            gr.HTML("<p class='sec'>Paintings on view</p>" + featured_html())
             gr.HTML("<p class='sec'>Browse by floor</p>")
             with gr.Row(elem_id="floors"):
                 floor_btns = [
