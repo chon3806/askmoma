@@ -331,7 +331,10 @@ def build_ui(bot):
             [thread_html([]), [], {}] + chip_updates(None) + [gr.update(variant="secondary") for _ in floors]
         )
 
-    with gr.Blocks(title="AskMoMA", theme=theme, css=CSS, fill_width=True) as demo:
+    # Gradio 6 moved theme and css from Blocks() to launch().
+    gradio6 = int(gr.__version__.split(".")[0]) >= 6
+    style = {"theme": theme, "css": CSS}
+    with gr.Blocks(title="AskMoMA", fill_width=True, **({} if gradio6 else style)) as demo:
         hist = gr.State([])
         ctx = gr.State({})
         with gr.Row(elem_id="shell", equal_height=True):
@@ -392,6 +395,7 @@ def build_ui(bot):
                 functools.partial(add_user, f"What's on floor {f}?"), [hist], [msg, hist, thread], queue=False
             ).then(**run)
         new_chat.click(reset, None, outs)
+    demo.askmoma_launch_kwargs = style if gradio6 else {}
     return demo
 
 
@@ -437,7 +441,8 @@ def main():
     if args.cli:
         cli(bot)
     else:
-        build_ui(bot).launch(server_port=args.port, share=args.share)
+        demo = build_ui(bot)
+        demo.launch(server_port=args.port, share=args.share, **demo.askmoma_launch_kwargs)
 
 
 if __name__ == "__main__":
