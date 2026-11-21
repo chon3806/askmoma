@@ -1,5 +1,5 @@
 # Core (enough to run the app with TF-IDF search and templated answers)
-gradio>=5.0,<6.0
+gradio>=6.32,<7.0
 pandas>=2.0
 numpy>=1.24
 scikit-learn>=1.3

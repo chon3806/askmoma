@@ -19,8 +19,8 @@ description = "Install the project and dev tools into .venv (from uv.lock)"
 run = "uv sync"
 
 [tasks.data]
-description = "Download MoMA's open data and rebuild data/on_view.csv"
-run = "uv run python -m askmoma.data.fetch"
+description = "Download MoMA's Artworks.csv and Artists.csv into data/"
+run = "uv run python -m askmoma.download"
 
 [tasks.app]
 description = "Start the AskMoMA chat page"

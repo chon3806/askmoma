@@ -24,22 +24,15 @@ The data is MoMA's public collection dataset
 (<https://github.com/MuseumofModernArt/collection>, CC0). Put `Artworks.csv`
 and `Artists.csv` in a `data/` folder next to `app.py`.
 
-The CSVs are large and stored with Git LFS, so either:
+Download the two large files with:
 
 ```bash
-# Option A: clone with Git LFS
-git lfs install
-git clone https://github.com/MuseumofModernArt/collection.git
-mkdir -p data && cp collection/Artworks.csv collection/Artists.csv data/
-
-# Option B: download just the two files
-mkdir -p data
-curl -L -o data/Artworks.csv https://media.githubusercontent.com/media/MuseumofModernArt/collection/main/Artworks.csv
-curl -L -o data/Artists.csv  https://media.githubusercontent.com/media/MuseumofModernArt/collection/main/Artists.csv
+mise run data
 ```
 
-If a file is only a few hundred bytes, you downloaded the LFS pointer, not
-the data; use the other option.
+The files are stored with Git LFS upstream, so the download checks their size. If it reports a
+Git LFS pointer, run it again later. Until the data is in place, you can try the app on the small
+test data with `python app.py --data tests/fixtures`.
 
 Set the date you pulled the data so answers say how current they are:
 

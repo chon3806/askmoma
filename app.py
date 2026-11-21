@@ -14,7 +14,9 @@ import html
 import logging
 import os
 import re
+import sys
 import warnings
+from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 for noisy in ("httpx", "urllib3", "huggingface_hub", "sentence_transformers"):
@@ -419,6 +421,17 @@ def main():
     args = ap.parse_args()
 
     from askmoma import AskMoMA, load
+    from askmoma.config import DATA_DIR
+
+    data_dir = Path(args.data) if args.data else DATA_DIR
+    if not (data_dir / "Artworks.csv").exists():
+        print(
+            f"Artworks.csv is not in {data_dir}.\n"
+            "Download MoMA's data first with: mise run data\n"
+            "or try the app on the small test data: python app.py --data tests/fixtures",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     bot = AskMoMA(load(args.data))
     if args.cli:
