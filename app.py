@@ -38,18 +38,7 @@ STARTERS = [
 ]
 N_CHIPS = 4
 
-CSS = """/* ---- paintings in the empty margins (wide screens only) ---- */
-#body {position:relative;}
-#gutters {position:fixed !important; top:120px; bottom:24px; left:0; right:0; height:auto !important; z-index:0; padding:0 !important; margin:0 !important; background:transparent !important; border:0 !important; pointer-events:none; display:none !important;}
-.gut {position:absolute; top:0; bottom:0; width:120px; pointer-events:auto;}
-.gut-left {left:10px;}
-.gut-right {right:10px;}
-.gut-slide {position:absolute; inset:0; border-radius:18px; background-size:cover; background-position:center; opacity:0;
-  box-shadow:0 14px 30px -18px rgba(0,0,0,.5); animation-name:gut-fade; animation-iteration-count:infinite;
-  animation-timing-function:ease-in-out; animation-fill-mode:both;}
-@keyframes gut-fade {0% {opacity:0} 4% {opacity:1} 21% {opacity:1} 25% {opacity:0} 100% {opacity:0}}
-@media (min-width: 1400px) {#gutters {display:block !important;}}
-
+CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
 
 :root, .dark, body {
@@ -597,7 +586,7 @@ def set_featured(works) -> None:
         seen_artists.add(row["Artist"])
         used.add(row["ImageURL"])
         _pool.append({"title": row["Title"], "image": row["ImageURL"], "link": row["link"]})
-        if len(_pool) >= 24:
+        if len(_pool) >= 12:
             break
 
 
@@ -605,26 +594,6 @@ def _slot(k: int) -> dict | None:
     """The k-th painting for a background, so each place on the page shows a different one."""
     source = _pool or _featured
     return source[k % len(source)] if source else None
-
-
-def _gutter_html(side: str, start: int, seconds: int) -> str:
-    """A slow looping slideshow of paintings for the empty margin beside the page content."""
-    slides = []
-    for i in range(4):
-        item = _slot(start + i)
-        if not item:
-            continue
-        slides.append(
-            f"<a class='gut-slide' href='{_e(item['link'])}' target='_blank' rel='noopener' "
-            f"title='{_e(item['title'])}' style=\"background-image:url('{_e(item['image'])}');"
-            f'animation-duration:{seconds}s;animation-delay:{i * seconds / 4:g}s"></a>'
-        )
-    return f"<div class='gut gut-{side}'>{''.join(slides)}</div>"
-
-
-def gutters_html() -> str:
-    """Left and right margins: two independent slideshows with paintings not used elsewhere."""
-    return _gutter_html("left", 8, 28) + _gutter_html("right", 12, 36)
 
 
 def _bg_style(item: dict | None = None) -> str:
@@ -993,7 +962,6 @@ def build_ui(bot):
         gr.HTML(header_html())
         gr.HTML(hero_html())
         with gr.Column(elem_id="body"):
-            gr.HTML(gutters_html(), elem_id="gutters")
             gr.HTML(about_html(col))
             gr.HTML("<p class='sec'>Paintings on view</p>" + featured_html())
             gr.HTML("<p class='sec'>Common FAQs</p>")
