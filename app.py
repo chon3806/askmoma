@@ -772,6 +772,16 @@ def _img_bg(i: int) -> str:
     )
 
 
+def visit_html() -> str:
+    """The Visit box, shown between the FAQs and the footer."""
+    return (
+        "<div class='visit'><div><div class='yr'>Visit</div>"
+        "<b>11 West 53rd Street</b>, between Fifth and Sixth Avenues, in Midtown Manhattan. "
+        "Hours, tickets and gallery changes are on moma.org.</div>"
+        "<a href='https://www.moma.org' target='_blank' rel='noopener'>Plan your visit &rarr;</a></div>"
+    )
+
+
 def about_html(col) -> str:
     on = col.works[col.works["on_view"]]
     artists = on.explode("cids")["cids"].dropna().nunique()
@@ -816,10 +826,6 @@ def about_html(col) -> str:
         "It is a gathering place for artists, students and visitors, and it cares for one of the "
         "leading collections of modern and contemporary art.</p>"
         f"<div class='facts'>{fact_cards}</div>"
-        "<div class='visit'><div><div class='yr'>Visit</div>"
-        "<b>11 West 53rd Street</b>, between Fifth and Sixth Avenues, in Midtown Manhattan. "
-        "Hours, tickets and gallery changes are on moma.org.</div>"
-        "<a href='https://www.moma.org' target='_blank' rel='noopener'>Plan your visit &rarr;</a></div>"
         "</section>"
     )
 
@@ -1002,6 +1008,7 @@ def build_ui(bot):
                     )
                     for f in floors
                 ]
+            gr.HTML(visit_html())
             gr.HTML(footer_html(col))
         with gr.Column(elem_id="chatpanel", visible=False) as panel:
             with gr.Row(elem_id="chat-head"):
