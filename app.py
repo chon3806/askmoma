@@ -264,7 +264,6 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 #side .sec {margin-top:28px !important; margin-bottom:6px;}
 @media (max-width: 900px) {
   .welcome {padding:56px 28px 48px !important; min-height:0;}
-  .featured {grid-template-columns:1fr !important;}
   .featured .art img {height:240px !important;}
 }
 
@@ -448,8 +447,7 @@ body.chat-resizing, body.chat-resizing * {cursor:nwse-resize !important; user-se
 .featured {gap:24px !important; margin-top:40px !important;}
 .featured .art img {height:300px !important;}
 .featured .art span {padding:16px 18px 18px !important;}
-.featured {grid-template-columns:1fr !important;}
-.featured .art img {height:240px !important;}
+@media (max-width: 900px) {.featured .art img {height:240px !important;}}
 .hero-wide {min-height:340px; padding:56px 48px; display:flex; flex-direction:column; justify-content:flex-end; color:#ffffff;}
 .hero-wide h1 {font-weight:900; font-size:clamp(2.4rem, 6vw, 4.8rem); line-height:.95; letter-spacing:-.02em; color:#ffffff; margin:0;}
 .hero-wide p {color:#e4e4e7; font-size:1.1rem; margin:12px 0 0; max-width:60ch;}
@@ -539,10 +537,7 @@ body.chat-resizing, body.chat-resizing * {cursor:nwse-resize !important; user-se
 .hdr-cta {justify-self:end; font-family:"Inter", system-ui, sans-serif; font-size:.92rem; font-weight:700; color:#ffffff !important; background:#0b0b0c;
   padding:10px 18px; border-radius:999px; text-decoration:none !important; transition:transform .15s, box-shadow .15s;}
 .hdr-cta:hover {transform:translateY(-1px); box-shadow:0 10px 20px -12px rgba(0,0,0,.6);}
-@media (max-width: 760px) {
-  .hdr-in {grid-template-columns:1fr auto; height:60px; padding:0 16px;}
-.hdr-nav {display:none;}
-.hdr-cta {font-size:.84rem; padding:9px 14px;}
+@media (max-width: 760px) {.hdr-in {grid-template-columns:1fr auto; height:60px; padding:0 16px;} .hdr-nav {display:none;} .hdr-cta {font-size:.84rem; padding:9px 14px;}}
 #body .visit, #body .visit div {color:#d4d4d8 !important;}
 #body .visit b {color:#ffffff !important;}
 #body .visit, #body .visit * {color:#e4e4e7 !important;}
