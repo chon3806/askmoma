@@ -433,6 +433,26 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 #body .featured .art b, #body .featured .art strong {font-size:1.1rem;}
 #pane-home .sec {font-family:"Inter", system-ui, sans-serif !important; font-size:1.2rem !important; font-weight:700 !important; padding:14px 14px 6px !important;}
 #pane-home .starter {font-size:1rem !important;}
+/* ---- header: brand, centred navigation, one call to action ---- */
+.hdr {position:sticky; top:0; z-index:60; background:rgba(255,255,255,.9) !important; backdrop-filter:saturate(1.6) blur(14px);
+  border-bottom:1px solid #e4e4e7; margin:0 !important;}
+.hdr-in {max-width:1180px; margin:0 auto; height:68px; padding:0 28px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px;}
+.hdr-brand {display:inline-flex; align-items:center; gap:10px; justify-self:start; text-decoration:none !important; color:#0b0b0c !important;}
+.hdr-mark {width:32px; height:32px; border-radius:9px; background:#0b0b0c; color:#ffffff; display:inline-flex; align-items:center; justify-content:center;
+  font-family:"Instrument Serif", Georgia, serif; font-size:1.25rem; line-height:1;}
+.hdr-name {font-family:"Inter", system-ui, sans-serif; font-weight:800; font-size:1.12rem; letter-spacing:-.02em;}
+.hdr-nav {display:flex; gap:6px; justify-self:center; background:#f4f4f5; border-radius:999px; padding:4px;}
+.hdr-nav a {font-family:"Inter", system-ui, sans-serif; font-size:.95rem; font-weight:600; color:#3f3f46 !important; text-decoration:none !important;
+  padding:8px 16px; border-radius:999px; transition:background .15s, color .15s;}
+.hdr-nav a:hover {background:#ffffff; color:#0b0b0c !important; box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.hdr-cta {justify-self:end; font-family:"Inter", system-ui, sans-serif; font-size:.92rem; font-weight:700; color:#ffffff !important; background:#0b0b0c;
+  padding:10px 18px; border-radius:999px; text-decoration:none !important; transition:transform .15s, box-shadow .15s;}
+.hdr-cta:hover {transform:translateY(-1px); box-shadow:0 10px 20px -12px rgba(0,0,0,.6);}
+@media (max-width: 760px) {
+  .hdr-in {grid-template-columns:1fr auto; height:60px; padding:0 16px;}
+  .hdr-nav {display:none;}
+  .hdr-cta {font-size:.84rem; padding:9px 14px;}
+}
 @media (max-width: 600px) {
   #chatpanel {left:10px !important; right:10px !important; width:auto !important; bottom:86px !important; height:76vh !important;}
   #chat-launch {right:16px !important; bottom:16px !important;}
@@ -642,11 +662,15 @@ def topbar_html(col) -> str:
 # ---------------------------------------------------------------- UI
 def header_html() -> str:
     return (
-        "<header class='mh'><span class='mh-logo'>AskMoMA</span><nav class='mh-nav'>"
+        "<header class='hdr'><div class='hdr-in'>"
+        "<a class='hdr-brand' href='#'><span class='hdr-mark'>A</span><span class='hdr-name'>AskMoMA</span></a>"
+        "<nav class='hdr-nav' aria-label='MoMA links'>"
         "<a href='https://www.moma.org/visit' target='_blank' rel='noopener'>Visit</a>"
         "<a href='https://www.moma.org/calendar/exhibitions' target='_blank' rel='noopener'>Exhibitions</a>"
         "<a href='https://www.moma.org/artists' target='_blank' rel='noopener'>Art and artists</a>"
-        "</nav></header>"
+        "</nav>"
+        "<a class='hdr-cta' href='https://www.moma.org' target='_blank' rel='noopener'>Visit moma.org &#8599;</a>"
+        "</div></header>"
     )
 
 
