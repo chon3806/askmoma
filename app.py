@@ -463,6 +463,13 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 }
 #body .visit, #body .visit div {color:#d4d4d8 !important;}
 #body .visit b {color:#ffffff !important;}
+/* ---- one brand lockup everywhere: mark + name, same look in header, footer and chat ---- */
+.brand-lockup {display:inline-flex; align-items:center; gap:10px;}
+.brand-lockup .hdr-mark {width:28px; height:28px; font-size:1.05rem;}
+.brand-lockup .hdr-name {font-size:1.05rem; color:#0b0b0c;}
+.ft-logo {display:inline-flex; align-items:center; gap:10px; margin-bottom:14px !important;}
+.ft-logo .hdr-mark {background:#ffffff !important; color:#0b0b0c !important; width:32px; height:32px;}
+.ft-logo .hdr-name {color:#ffffff !important; font-size:1.25rem;}
 @media (max-width: 600px) {
   #chatpanel {left:10px !important; right:10px !important; width:auto !important; bottom:86px !important; height:76vh !important;}
   #chat-launch {right:16px !important; bottom:16px !important;}
@@ -816,7 +823,7 @@ def footer_html(col) -> str:
     link = "<a href='{u}' target='_blank' rel='noopener'>{t} &#8599;</a>"
     return (
         "<div class='ft'><div class='ft-grid'>"
-        "<div class='ft-brand'><div class='ft-logo'>AskMoMA</div>"
+        "<div class='ft-brand'><div class='ft-logo'><span class='hdr-mark'>A</span><span class='hdr-name'>AskMoMA</span></div>"
         "<p>A guide to the works on view at The Museum of Modern Art, built from MoMA's public collection data.</p>"
         "<p class='ft-note'>A student project for MSAI-631 at the University of the Cumberlands. "
         "Not affiliated with The Museum of Modern Art.</p></div>"
@@ -967,7 +974,7 @@ def build_ui(bot):
         with gr.Column(elem_id="chatpanel", visible=False) as panel:
             with gr.Row(elem_id="chat-head"):
                 gr.HTML(
-                    "<div class='chat-head-text'><div class='chat-title'>AskMoMA</div>"
+                    "<div class='chat-head-text'><div class='chat-title brand-lockup'><span class='hdr-mark'>A</span><span class='hdr-name'>AskMoMA</span></div>"
                     "<div class='chat-sub'>Museum guide for works on view</div></div>"
                 )
                 close_btn = gr.Button("✕", elem_id="chat-close", size="sm")
