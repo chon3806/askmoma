@@ -408,6 +408,11 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .ft-note {font-size:.82rem !important; color:#71717a;}
 .ft-bar {display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:20px 0 28px; font-size:.82rem;}
 .ft-bar a {color:#e4e4e7; text-decoration:none;}
+.ft, .ft p, .ft li, .ft span, .ft div, .ft h4 {color:#a1a1aa !important;}
+.ft a, .ft b, .ft .ft-logo {color:#e4e4e7 !important;}
+.ft .ft-logo {color:#ffffff !important;}
+.ft h4 {color:#71717a !important;}
+.ft .ft-note {color:#71717a !important;}
 @media (max-width: 900px) {.ft-grid {grid-template-columns:1fr 1fr;}}
 @media (max-width: 560px) {.ft {padding:36px 22px 0;} .ft-grid {grid-template-columns:1fr;}}
 
@@ -860,7 +865,7 @@ def build_ui(bot):
         with gr.Column(elem_id="body"):
             gr.HTML(about_html(col))
             gr.HTML("<p class='sec'>Paintings on view</p>" + featured_html())
-            gr.HTML("<p class='sec'>Ask a question</p>")
+            gr.HTML("<p class='sec'>Common FAQs</p>")
             with gr.Row(elem_id="explore"):
                 explore_btns = [gr.Button(q, elem_classes=["ask-card"]) for q in EXPLORE]
             with gr.Row(elem_id="floors", visible=False):
