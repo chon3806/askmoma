@@ -420,6 +420,19 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .mh {position:sticky; top:0; z-index:60; backdrop-filter:saturate(1.4) blur(10px); background:rgba(255,255,255,.92) !important;}
 .mh-nav a {transition:opacity .15s;}
 .mh-nav a:hover {opacity:.6; text-decoration:none !important;}
+/* ---- section headings: large, dark, readable ---- */
+#body .sec {font-family:"Instrument Serif", Georgia, serif !important; font-size:clamp(1.9rem, 3.2vw, 2.4rem) !important;
+  font-weight:400 !important; color:#0b0b0c !important; letter-spacing:-.015em; line-height:1.1; padding:44px 0 16px !important; margin:0 !important;}
+#body .ask-card, #body .ask-card * {font-size:1.1rem !important;}
+#body .ask-card {font-family:"Inter", system-ui, sans-serif !important;}
+#body .stat span {font-size:1rem !important;}
+#body .about p, #body .about li {font-size:1.12rem !important; color:#27272a !important;}
+#body .about h2 {font-family:"Instrument Serif", Georgia, serif !important; font-weight:400 !important; font-size:clamp(2.2rem, 4vw, 3rem) !important;}
+#body .fact h3 {font-size:1.2rem !important;}
+#body .fact p {font-size:1.02rem !important; color:#27272a !important;}
+#body .featured .art b, #body .featured .art strong {font-size:1.1rem;}
+#pane-home .sec {font-family:"Inter", system-ui, sans-serif !important; font-size:1.2rem !important; font-weight:700 !important; padding:14px 14px 6px !important;}
+#pane-home .starter {font-size:1rem !important;}
 @media (max-width: 600px) {
   #chatpanel {left:10px !important; right:10px !important; width:auto !important; bottom:86px !important; height:76vh !important;}
   #chat-launch {right:16px !important; bottom:16px !important;}
