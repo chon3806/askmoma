@@ -35,6 +35,21 @@ PRONOUN_WORK = re.compile(
 PRONOUN_ARTIST = re.compile(r"\b(they|them|he|she|him|her|this artist|that artist|the artist)\b")
 
 INTENT_RULES: list[tuple[str, re.Pattern]] = [
+    # From the week 7 CUX redesign: say honestly what the bot is, and close a conversation politely.
+    (
+        "identity",
+        re.compile(
+            r"\b(are you (a |an )?(real )?(person|human|robot|bot|ai|machine)|is this (a |an )?(real )?(bot|person|human|ai)"
+            r"|am i (talking|chatting|speaking) (to|with) (a |an )?(real )?(person|human|bot|ai)|who are you)\b"
+        ),
+    ),
+    (
+        "goodbye",
+        re.compile(
+            r"^\s*(ok(ay)?[,!. ]*)?(thanks|thank you( so much| very much)?|thx|cheers|bye|goodbye|see you( later)?"
+            r"|that'?s all|that is all)[,!. ]*(bye|goodbye)?[!. ]*$"
+        ),
+    ),
     (
         "greeting",
         re.compile(
@@ -288,7 +303,7 @@ def parse(col: Collection, text: str, context: dict | None = None) -> Parsed:
     if intent.startswith("faq") and (p.floor or p.gallery or _names_a_work(col, tokens)):
         # "What's open on floor 5?" and "How much is Starry Night worth?" are not visit questions.
         intent = p.intent = detect_intent(text, skip_faq=True)
-    if intent.startswith("faq") or intent == "greeting":
+    if intent.startswith("faq") or intent in ("greeting", "identity", "goodbye"):
         return p
 
     artist_first = intent in ("works_by_artist", "artist_info", "top_artists", "nationality")

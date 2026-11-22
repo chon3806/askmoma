@@ -174,7 +174,60 @@ class AskMoMA:
         ans.context = {**(context or {}), **new_ctx}
         if ans.intent != "disambiguate":
             ans.context.pop("choices", None)  # "None of these" only answers the question just asked
+        # Remembered so "Not helpful" can offer a repair that fits the last answer.
+        ans.context["last_intent"], ans.context["last_question"] = ans.intent, message
         return ans
+
+    # ------------------------------------------------------------ conversation repair
+    def not_helpful(self, context: dict | None) -> Answer:
+        """The visitor marked the last answer as not helpful: apologise and offer a next step that
+        fits what was asked (week 7 CUX redesign: repair, never repeat the same answer)."""
+        context = dict(context or {})
+        intent, question = context.get("last_intent", ""), context.get("last_question", "")
+        if intent == "disambiguate" and context.get("choices"):
+            return self._none_of_these(context)
+        tips = {
+            "search": "Try a few specific words, such as a subject, a colour, or a medium "
+            "(*paintings of the sea*, *black and white photographs*), or name an artist.",
+            "recommend": "Tell me what you didn't like, for example *I loved The Starry Night but not "
+            "Water Lilies*, and I'll steer away from it.",
+            "not_found": "It may not be in MoMA's collection. Check the title's spelling, or add the "
+            "artist's name, for example *Flag by Jasper Johns*.",
+        }
+        work_tip = (
+            "If you meant a different work with the same title, add the artist's name "
+            "(*Water Lilies by Claude Monet*) or the year."
+        )
+        tip = tips.get(intent) or (work_tip if context.get("work_row") is not None else "")
+        if not tip:
+            tip = "Try naming the artwork's title, an artist, or a floor."
+        text = f"Sorry that didn't help. {tip}"
+        if question:
+            link = f"{config.MOMA_HOME}/search/?q=" + "+".join(norm(question).split())
+            text += f"\n\nYou can also [search moma.org]({link}) for *{question}*."
+        return Answer(
+            text=text,
+            suggestions=["What can you do?", "What's on floor 5?", "Are you a person?"],
+            intent="repair",
+            context={**context, "last_intent": "repair"},
+        )
+
+    def _h_identity(self, p, **_):
+        return Answer(
+            text=(
+                "I'm **AskMoMA**, an automated guide, not a person. I answer from MoMA's public collection "
+                f"data ({len(self.col.on_view):,} works on view) and link every answer to moma.org. "
+                "I don't keep your conversation after you close the page.\n\n"
+                f"For anything I can't answer, MoMA's own staff can help: [Plan your visit]({config.MOMA_VISIT})."
+            ),
+            suggestions=["What can you do?", "Where is The Starry Night?"],
+        )
+
+    def _h_goodbye(self, p, **_):
+        return Answer(
+            text="You're welcome. Enjoy the museum! Ask me again any time you're looking for a work.",
+            suggestions=["Where is The Starry Night?", "What are the museum hours?"],
+        )
 
     # ------------------------------------------------------------ FAQ
     def _faq(self, key: str) -> Answer:

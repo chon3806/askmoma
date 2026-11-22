@@ -19,6 +19,7 @@ import warnings
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+log = logging.getLogger("askmoma.app")
 for noisy in ("httpx", "urllib3", "huggingface_hub", "sentence_transformers"):
     logging.getLogger(noisy).setLevel(logging.WARNING)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -355,6 +356,17 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .chat-size-bar button:hover {background:#f4f4f5;}
 .chat-size-bar button:focus-visible {outline:2px solid #0b0b0c; outline-offset:2px;}
 body.chat-resizing, body.chat-resizing * {cursor:nwse-resize !important; user-select:none !important;}
+
+/* ---- "Was this helpful?" and the newcomer tips ---- */
+#feedback {align-items:center !important; gap:8px !important; margin:2px 0 6px 44px !important; flex-wrap:wrap !important;
+  width:auto !important; max-width:calc(100% - 44px) !important;}
+#feedback > div {flex:0 0 auto !important; width:auto !important; min-width:0 !important;}  /* Gradio sizes HTML blocks wide */
+#feedback .fb-q {color:#52525b; font-size:.85rem; white-space:nowrap;}
+#feedback .fb-btn {flex:0 0 auto !important; min-width:0 !important; padding:4px 12px !important; border-radius:999px !important;
+  background:#ffffff !important; color:#0b0b0c !important; border:1px solid #d4d4d8 !important; font-size:.85rem !important;}
+#feedback .fb-btn:hover {border-color:#0b0b0c !important;}
+.tips {font-size:.82rem; color:#52525b; background:#f4f4f5; border-radius:12px; padding:8px 12px; margin:0 0 8px;}
+.tips b {color:#0b0b0c;}
 """
 
 # The chat window sits at the bottom right, so it grows up and to the left: a grip
@@ -432,7 +444,33 @@ CHAT_RESIZE_HEAD = """
     });
   }
 
-  const scan = () => { const p = document.getElementById("chatpanel"); if (p) setup(p); };
+  // Keyboard (WCAG 2.2, from the week 9-10 usability review): Escape closes the chat,
+  // and opening the Messages tab puts the cursor in the message box.
+  document.addEventListener("keydown", (e) => {
+    const p = document.getElementById("chatpanel");
+    if (e.key === "Escape" && p && p.offsetParent !== null) document.getElementById("chat-close")?.click();
+  });
+  // Keep the latest exchange in view: scroll so the newest question (or a reply with no
+  // question, such as a repair) sits at the top of the chat window, with its answer below.
+  let lastKey = "";
+  function showLatest(force) {
+    const rows = document.querySelectorAll("#chatpanel .thread .row-u, #chatpanel .thread .row-a");
+    if (!rows.length) return;
+    const last = rows[rows.length - 1];
+    const key = rows.length + ":" + last.textContent.length;
+    if (!force && key === lastKey) return;
+    lastKey = key;
+    const prev = last.previousElementSibling;
+    const target = last.classList.contains("row-a") && prev && prev.classList.contains("row-u") ? prev : last;
+    requestAnimationFrame(() => target.scrollIntoView({block: "start", behavior: "smooth"}));
+  }
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".floor-card, #chatpanel #chips button, #chat-launch")) {
+      setTimeout(() => { document.querySelector("#ask textarea")?.focus({preventScroll: true}); showLatest(true); }, 350);
+    }
+  });
+
+  const scan = () => { const p = document.getElementById("chatpanel"); if (p) { setup(p); showLatest(false); } };
   new MutationObserver(scan).observe(document.documentElement, {childList: true, subtree: true});
   window.addEventListener("resize", () => { const p = document.getElementById("chatpanel"); if (p) apply(p, load()); });
   scan();
@@ -597,9 +635,10 @@ def thread_html(history: list) -> str:
     if not history:
         greeting = (
             "<div class='row-a'><div class='avatar'>A</div><div class='ans'><div class='card'>"
-            "<p>Hi! I'm AskMoMA. I can tell you where a work is, who made it, what else an artist "
-            "made, and what to see next.</p>"
-            "<p>Try one of the questions below, or pick a floor on the page.</p></div></div></div>"
+            "<p>Hi! I'm AskMoMA, an automated guide that answers from MoMA's public collection data. "
+            "I can tell you where a work is, who made it, what else an artist made, and what to see next.</p>"
+            "<p>Try one of the questions below, or pick a floor on the page. "
+            "I don't keep this conversation after you close the page.</p></div></div></div>"
         )
         return (
             "<div class='thread' role='log' aria-live='polite' aria-label='Conversation with AskMoMA'>"
@@ -607,7 +646,8 @@ def thread_html(history: list) -> str:
         )
     rows = []
     for q, a, cards in history:
-        rows.append(f"<div class='row-u'><div class='bubble'>{_e(q)}</div></div>")
+        if q:  # a repair after "Not helpful" has no question of its own
+            rows.append(f"<div class='row-u'><div class='bubble'>{_e(q)}</div></div>")
         body = (
             f"<div class='card'>{a}</div>{works_html(cards)}"
             if a
@@ -688,16 +728,6 @@ def popup_banner_html() -> str:
     )
 
 
-def home_html() -> str:
-    return (
-        "<div class='home-card'><p class='kicker'>Hi there</p>"
-        "<h2>How can we help?</h2>"
-        "<p>Ask about any work on view, an artist, or your visit.</p></div>"
-        "<a class='home-link' href='https://www.moma.org' target='_blank' rel='noopener'>"
-        "Visit moma.org <span>&rarr;</span></a>"
-    )
-
-
 def footer_html(col) -> str:
     return (
         "<div class='site-footer'>"
@@ -756,10 +786,18 @@ def build_ui(bot):
             history.append([message, None, []])
         return "", history, thread_html(history)
 
+    # Answers where "Was this helpful?" makes no sense.
+    no_feedback = {"greeting", "goodbye", "identity", "repair", "clarify"}
+
+    def guidance(history) -> bool:
+        """Adaptive guidance (week 13): show the tips until the visitor has two useful answers."""
+        answered = [h for h in history if h[0] and h[1] and "I couldn't find" not in h[1]]
+        return len(answered) < 2
+
     def answer(history, ctx, on_view_only):
         history = list(history or [])
         if not history or history[-1][1]:
-            return [thread_html(history), history, ctx] + [gr.update()] * (N_CHIPS + len(floors))
+            return [thread_html(history), history, ctx] + [gr.update()] * (N_CHIPS + len(floors) + 2)
         question = history[-1][0]
         ans = bot.ask(question, ctx, on_view_only=on_view_only)
         text = llm.polish(question, ans.text)  # unchanged unless ASKMOMA_LLM is set
@@ -773,11 +811,32 @@ def build_ui(bot):
             [thread_html(history), history, ans.context]
             + chip_updates(ans.suggestions)
             + [gr.update(variant="primary" if f in hit else "secondary") for f in floors]
+            + [gr.update(visible=ans.intent not in no_feedback), gr.update(visible=guidance(history))]
         )
+
+    def not_helpful(history, ctx):
+        """👎: a repair that fits the last answer, added to the conversation (week 7 CUX redesign)."""
+        history = list(history or [])
+        ans = bot.not_helpful(ctx)
+        history.append(["", md(ans.text), ans.cards])
+        log.info("feedback: not helpful (after %s)", (ctx or {}).get("last_intent", "?"))
+        return (
+            [thread_html(history), history, ans.context]
+            + chip_updates(ans.suggestions)
+            + [gr.update() for _ in floors]
+            + [gr.update(visible=False), gr.update(visible=guidance(history))]
+        )
+
+    def helpful(ctx):
+        log.info("feedback: helpful (after %s)", (ctx or {}).get("last_intent", "?"))
+        return gr.update(visible=False)
 
     def reset():
         return (
-            [thread_html([]), [], {}] + chip_updates(None) + [gr.update(variant="secondary") for _ in floors]
+            [thread_html([]), [], {}]
+            + chip_updates(STARTERS)
+            + [gr.update(variant="secondary") for _ in floors]
+            + [gr.update(visible=False), gr.update(visible=True)]
         )
 
     # Gradio 6 moved theme and css from Blocks() to launch().
@@ -811,20 +870,25 @@ def build_ui(bot):
                 )
                 close_btn = gr.Button("✕", elem_id="chat-close", size="sm")
             gr.HTML(popup_banner_html())
-            with gr.Column(visible=True, elem_id="pane-home") as pane_home:
-                gr.HTML(home_html())
-                send_btn = gr.Button("Send us a message", elem_id="send-btn", variant="primary")
-                gr.HTML("<p class='sec'>Popular questions</p>")
-                starter_btns = [
-                    gr.Button(q, elem_classes=["starter"])
-                    for q in STARTERS + ["What are the museum hours?", "How much is admission?"]
-                ]
-            with gr.Column(visible=False, elem_id="pane-messages") as pane_msgs:
+            # The chat opens straight on the conversation; popular questions are the first chips.
+            with gr.Column(elem_id="pane-messages"):
                 new_chat = gr.Button("New conversation", elem_id="newchat", size="sm")
                 thread = gr.HTML(thread_html([]))
+                # "Did that answer your question?" (week 7 CUX redesign; week 9-10 task success).
+                with gr.Row(elem_id="feedback", visible=False) as fb_row:
+                    gr.HTML("<span class='fb-q'>Was this helpful?</span>")
+                    fb_up = gr.Button("👍 Yes", size="sm", elem_classes=["fb-btn"])
+                    fb_down = gr.Button("👎 No", size="sm", elem_classes=["fb-btn"])
                 with gr.Column(elem_id="composer"):
+                    # Adaptive guidance (week 13): shown to newcomers, hidden once they are under way.
+                    tips = gr.HTML(
+                        "<p class='tips'><b>Tips:</b> ask where a work is (<i>Where is The Starry Night?</i>), "
+                        "about an artist or a floor, or what to see next "
+                        "(<i>I loved Water Lilies but not Flag</i>). These tips hide after a couple of "
+                        "answers; type <i>help</i> to see examples again.</p>"
+                    )
                     with gr.Row(elem_id="chips"):
-                        chips = [gr.Button(visible=False, size="sm") for _ in range(N_CHIPS)]
+                        chips = [gr.Button(q, size="sm") for q in STARTERS[:N_CHIPS]]
                     msg = gr.Textbox(
                         elem_id="ask",
                         label="Your question",  # announced by screen readers even though it is not shown
@@ -843,9 +907,6 @@ def build_ui(bot):
                     on_view_only = gr.Checkbox(
                         value=True, label="Only list works that are on view", container=False
                     )
-            with gr.Row(elem_id="chatnav"):
-                nav_home = gr.Button("Home", elem_id="nav-home", variant="primary")
-                nav_msgs = gr.Button("Messages", elem_id="nav-messages", variant="secondary")
         launch = gr.Button("Ask", elem_id="chat-launch")
 
         def toggle(is_open):
@@ -854,39 +915,23 @@ def build_ui(bot):
         def close_chat():
             return False, gr.update(visible=False)
 
-        pane_outs = [pane_home, pane_msgs, nav_home, nav_msgs]
-
-        def show(tab):
-            home = tab == "home"
-            return (
-                gr.update(visible=home),
-                gr.update(visible=not home),
-                gr.update(variant="primary" if home else "secondary"),
-                gr.update(variant="primary" if not home else "secondary"),
-            )
-
-        def open_messages():
-            return (gr.update(visible=True), *show("messages"))
+        def open_chat():
+            return True, gr.update(visible=True)
 
         launch.click(toggle, [open_state], [open_state, panel], queue=False)
         close_btn.click(close_chat, None, [open_state, panel], queue=False)
-        send_btn.click(lambda: show("messages"), None, pane_outs, queue=False)
-        nav_home.click(lambda: show("home"), None, pane_outs, queue=False)
-        nav_msgs.click(lambda: show("messages"), None, pane_outs, queue=False)
 
-        outs = [thread, hist, ctx, *chips, *floor_btns]
+        outs = [thread, hist, ctx, *chips, *floor_btns, fb_row, tips]
         run = dict(fn=answer, inputs=[hist, ctx, on_view_only], outputs=outs)
+        fb_up.click(helpful, [ctx], [fb_row], queue=False)
+        fb_down.click(not_helpful, [hist, ctx], outs, queue=False)
         msg.submit(add_user, [msg, hist], [msg, hist, thread], queue=False).then(**run)
         for b in chips:
             b.click(add_user, [b, hist], [msg, hist, thread], queue=False).then(**run)
-        for b in starter_btns:
-            b.click(add_user, [b, hist], [msg, hist, thread], queue=False).then(
-                open_messages, None, [panel, *pane_outs], queue=False
-            ).then(**run)
         for f, b in zip(floors, floor_btns, strict=True):
             b.click(
                 functools.partial(add_user, f"What's on floor {f}?"), [hist], [msg, hist, thread], queue=False
-            ).then(open_messages, None, [panel, *pane_outs], queue=False).then(**run)
+            ).then(open_chat, None, [open_state, panel], queue=False).then(**run)
         new_chat.click(reset, None, outs)
     demo.askmoma_launch_kwargs = style if gradio6 else {}
     return demo
