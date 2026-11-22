@@ -428,6 +428,131 @@ body.chat-resizing, body.chat-resizing * {cursor:nwse-resize !important; user-se
   white-space:nowrap !important;}
 #chat-head #newchat:hover {border-color:#0b0b0c !important; background:#f4f4f5 !important;}
 #chat-head #newchat:focus-visible {outline:2px solid #0b0b0c !important; outline-offset:2px;}
+
+/* ---- page sections: header, hero, stats, about, paintings, visit, footer (chat rules excluded) ---- */
+.sec {color:#94a3b8; font-size:.74rem; font-weight:600; padding:16px 8px 4px; margin:0;}
+/* ---- visual refresh */
+.featured {display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; margin-top:18px;}
+.art {display:block; background:#ffffff; border-radius:18px; overflow:hidden; text-decoration:none !important;
+  border:1px solid rgba(255,255,255,.85); box-shadow:0 10px 30px -18px rgba(15,23,42,.35);}
+.art img {display:block; width:100%; height:200px; object-fit:cover; background:#e5e7eb;}
+.art span {display:block; padding:10px 12px 12px; color:#4b5563; font-size:.84rem; line-height:1.35;}
+.art b {display:block; color:#0b0b0c; font-size:.92rem; font-weight:600;}
+@media (max-width: 760px) {.featured {grid-template-columns:1fr;}}
+.featured .art {transition:transform .18s ease, box-shadow .18s ease;}
+.featured .art:hover {transform:translateY(-3px); box-shadow:0 18px 36px -20px rgba(15,23,42,.5);}
+.featured .art img {height:220px;}
+.featured .art {background:#18181b !important; border-color:rgba(255,255,255,.1) !important;}
+.featured .art b {color:#fafafa !important;}
+.featured .art span {color:#a1a1aa !important;}
+.featured {gap:24px !important; margin-top:40px !important;}
+.featured .art img {height:300px !important;}
+.featured .art span {padding:16px 18px 18px !important;}
+.featured {grid-template-columns:1fr !important;}
+.featured .art img {height:240px !important;}
+.hero-wide {min-height:340px; padding:56px 48px; display:flex; flex-direction:column; justify-content:flex-end; color:#ffffff;}
+.hero-wide h1 {font-weight:900; font-size:clamp(2.4rem, 6vw, 4.8rem); line-height:.95; letter-spacing:-.02em; color:#ffffff; margin:0;}
+.hero-wide p {color:#e4e4e7; font-size:1.1rem; margin:12px 0 0; max-width:60ch;}
+/* ---- body, floor cards, popup tabs and home ---- */
+#body {max-width:1180px; margin:0 auto; padding:40px 40px 80px;}
+.stats {display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px;}
+.stat {background:#ffffff; border:1px solid #e4e4e7; border-radius:18px; padding:22px 24px;}
+.stat b {display:block; font-size:2.2rem; font-weight:800; color:#0b0b0c; letter-spacing:-.02em;}
+.stat span {color:#52525b; font-size:.95rem;}
+.about {margin-top:36px;}
+.about h2 {font-weight:800; font-size:1.9rem; letter-spacing:-.01em; color:#0b0b0c; margin:0 0 12px;}
+.about h3 {font-weight:700; font-size:1.2rem; margin:24px 0 8px; color:#0b0b0c;}
+.about p, .about li {color:#3f3f46; font-size:1.05rem; line-height:1.6; max-width:70ch;}
+.about a {color:#0b0b0c; font-weight:600;}
+.home-card h2 {color:#ffffff; font-weight:800; font-size:1.5rem; margin:4px 0 6px;}
+/* ---- credits and footer ---- */
+.credit {display:block; font-size:.78rem; color:#71717a; font-style:normal; margin-top:6px; text-decoration:none;}
+.art em.credit a, a.credit {color:#52525b;}
+.hero-credit {color:#e4e4e7 !important; margin-top:14px; font-size:.85rem; text-decoration:underline;}
+.featured {margin-top:14px;}
+#explore {gap:12px !important; flex-wrap:wrap !important;}
+.ask-card {flex:1 1 220px !important; min-height:84px !important; border-radius:18px !important; background:#ffffff !important;
+  border:1px solid #e4e4e7 !important; color:#0b0b0c !important; font-weight:600 !important; text-align:left !important;
+  justify-content:flex-start !important; padding:18px !important; white-space:normal !important; line-height:1.35 !important;}
+.ask-card:hover {border-color:#0b0b0c !important; box-shadow:0 14px 28px -20px rgba(0,0,0,.5) !important;}
+.facts {display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px; margin-top:20px;}
+.fact {background:#ffffff; border:1px solid #e4e4e7; border-radius:18px; padding:20px 22px;}
+.fact .yr, .visit .yr {font-family:ui-monospace, Menlo, monospace; font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; color:#71717a; margin-bottom:6px;}
+.fact h3 {font-size:1.05rem; font-weight:700; margin:0 0 6px; color:#0b0b0c;}
+.fact p {margin:0; color:#3f3f46; font-size:.95rem; line-height:1.55;}
+.visit {margin-top:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; background:#0b0b0c; color:#e4e4e7; border-radius:18px; padding:22px 24px; font-size:.98rem; line-height:1.5;}
+.visit b {color:#ffffff;}
+.visit a {color:#ffffff; font-weight:700; text-decoration:none; border:1px solid #52525b; border-radius:999px; padding:10px 18px;}
+.visit a:hover {background:#ffffff; color:#0b0b0c;}
+@media (max-width: 760px) {.facts {grid-template-columns:1fr;}}
+/* ---- footer: dark, to mark the end of the page ---- */
+.ft {margin-top:64px; background:#0b0b0c !important; color:#a1a1aa !important; border-radius:24px 24px 0 0; padding:48px 40px 0; width:100%; box-sizing:border-box;}
+.ft-grid {display:grid; grid-template-columns:1.4fr 1fr 1fr 1.2fr; gap:36px; padding-bottom:36px; border-bottom:1px solid #27272a;}
+.ft h4 {font-family:ui-monospace, Menlo, monospace; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:#71717a; margin:0 0 12px; font-weight:500;}
+.ft ul {list-style:none; padding:0; margin:0;}
+.ft li {margin-bottom:9px; font-size:.92rem; line-height:1.45;}
+.ft a {color:#e4e4e7; text-decoration:none; font-weight:500;}
+.ft a:hover {color:#ffffff; text-decoration:underline;}
+.ft-logo {font-weight:900; font-size:1.5rem; color:#ffffff; letter-spacing:-.02em; margin-bottom:12px;}
+.ft-brand p {margin:0 0 10px; font-size:.92rem; line-height:1.6; max-width:40ch;}
+.ft-note {font-size:.82rem !important; color:#71717a;}
+.ft-bar {display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; padding:20px 0 28px; font-size:.82rem;}
+.ft-bar a {color:#e4e4e7; text-decoration:none;}
+.ft, .ft p, .ft li, .ft span, .ft div, .ft h4 {color:#a1a1aa !important;}
+.ft a, .ft b, .ft .ft-logo {color:#e4e4e7 !important;}
+.ft .ft-logo {color:#ffffff !important;}
+.ft h4 {color:#71717a !important;}
+.ft .ft-note {color:#71717a !important;}
+@media (max-width: 900px) {.ft-grid {grid-template-columns:1fr 1fr;}}
+@media (max-width: 560px) {.ft {padding:36px 22px 0;} .ft-grid {grid-template-columns:1fr;}}
+/* ---- section headings: large, dark, readable ---- */
+#body .sec {font-family:"Instrument Serif", Georgia, serif !important; font-size:clamp(1.9rem, 3.2vw, 2.4rem) !important;
+  font-weight:400 !important; color:#0b0b0c !important; letter-spacing:-.015em; line-height:1.1; padding:44px 0 16px !important; margin:0 !important;}
+#body .ask-card, #body .ask-card * {font-size:1.1rem !important;}
+#body .ask-card {font-family:"Inter", system-ui, sans-serif !important;}
+#body .stat span {font-size:.85rem !important;}
+#body .stats {gap:12px !important;}
+#body .stat {padding:14px 18px !important; border-radius:14px !important; min-height:0 !important; border:0 !important; background:#0b0b0c;}
+#body .stat b {font-size:1.6rem !important; line-height:1.1; color:#ffffff !important;}
+#body .stat.has-img span {color:#e4e4e7 !important;}
+#body .fact.has-img {border:0 !important; color:#ffffff; min-height:170px;}
+#body .fact.has-img h3 {color:#ffffff !important;}
+#body .fact.has-img p {color:#e4e4e7 !important;}
+#body .fact.has-img .yr {color:#d4d4d8 !important;}
+#body .about p, #body .about li {font-size:1.12rem !important; color:#27272a !important;}
+#body .about h2 {font-family:"Instrument Serif", Georgia, serif !important; font-weight:400 !important; font-size:clamp(2.2rem, 4vw, 3rem) !important;}
+#body .fact h3 {font-size:1.2rem !important;}
+#body .fact p {font-size:1.02rem !important; color:#27272a !important;}
+#body .featured .art b, #body .featured .art strong {font-size:1.1rem;}
+/* ---- header: brand, centred navigation, one call to action ---- */
+.hdr {position:sticky; top:0; z-index:60; background:rgba(255,255,255,.9) !important; backdrop-filter:saturate(1.6) blur(14px);
+  border-bottom:1px solid #e4e4e7; margin:0 !important;}
+.hdr-in {max-width:1180px; margin:0 auto; height:68px; padding:0 28px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px;}
+.hdr-brand {display:inline-flex; align-items:center; gap:10px; justify-self:start; text-decoration:none !important; color:#0b0b0c !important;}
+.hdr-mark {width:32px; height:32px; border-radius:9px; background:#0b0b0c; color:#ffffff; display:inline-flex; align-items:center; justify-content:center;
+  font-family:"Instrument Serif", Georgia, serif; font-size:1.25rem; line-height:1;}
+.hdr-name {font-family:"Inter", system-ui, sans-serif; font-weight:800; font-size:1.12rem; letter-spacing:-.02em;}
+.hdr-nav {display:flex; gap:6px; justify-self:center; background:#f4f4f5; border-radius:999px; padding:4px;}
+.hdr-nav a {font-family:"Inter", system-ui, sans-serif; font-size:.95rem; font-weight:600; color:#3f3f46 !important; text-decoration:none !important;
+  padding:8px 16px; border-radius:999px; transition:background .15s, color .15s;}
+.hdr-nav a:hover {background:#ffffff; color:#0b0b0c !important; box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.hdr-cta {justify-self:end; font-family:"Inter", system-ui, sans-serif; font-size:.92rem; font-weight:700; color:#ffffff !important; background:#0b0b0c;
+  padding:10px 18px; border-radius:999px; text-decoration:none !important; transition:transform .15s, box-shadow .15s;}
+.hdr-cta:hover {transform:translateY(-1px); box-shadow:0 10px 20px -12px rgba(0,0,0,.6);}
+@media (max-width: 760px) {
+  .hdr-in {grid-template-columns:1fr auto; height:60px; padding:0 16px;}
+.hdr-nav {display:none;}
+.hdr-cta {font-size:.84rem; padding:9px 14px;}
+#body .visit, #body .visit div {color:#d4d4d8 !important;}
+#body .visit b {color:#ffffff !important;}
+#body .visit, #body .visit * {color:#e4e4e7 !important;}
+#body .visit b, #body .visit a {color:#ffffff !important;}
+.hdr-cta {white-space:nowrap !important;}
+@media (max-width: 900px) {.featured {grid-template-columns:repeat(3, minmax(0,1fr)) !important;}}
+@media (max-width: 760px) {.featured {grid-template-columns:1fr !important;}}
+.ft-logo {display:inline-flex; align-items:center; gap:10px; margin-bottom:14px !important;}
+.ft-logo .hdr-mark {background:#ffffff !important; color:#0b0b0c !important; width:32px; height:32px;}
+.ft-logo .hdr-name {color:#ffffff !important; font-size:1.25rem;}
 """
 
 # The chat window sits at the bottom right, so it grows up and to the left: a grip
@@ -697,6 +822,75 @@ def featured_html() -> str:
     return f"<div class='featured'>{items}</div>"
 
 
+EXPLORE = [
+    "Where is The Starry Night?",
+    "What works by Frida Kahlo are on view?",
+    "Which artists have the most works on floor 5?",
+    "What are the museum hours?",
+]
+
+
+_pool: list[dict] = []  # more on-view paintings for the page's picture backgrounds, one per artist
+
+
+def set_pool(works) -> None:
+    """Other paintings on view (none already featured) for the page's picture backgrounds."""
+    _pool.clear()
+    used = {f["image"] for f in _featured}
+    paint = works[
+        (works["Classification"] == "Painting") & (works["on_view"].astype(bool)) & works["ImageURL"].notna()
+    ]
+    seen_artists: set = set()
+    for _, row in paint.iterrows():
+        if row["ImageURL"] in used or row["Artist"] in seen_artists:
+            continue
+        seen_artists.add(row["Artist"])
+        used.add(row["ImageURL"])
+        _pool.append({"title": row["Title"], "image": row["ImageURL"], "link": row["link"]})
+        if len(_pool) >= 24:
+            break
+
+
+def _slot(k: int) -> dict | None:
+    """The k-th painting for a background, so each place on the page shows a different one."""
+    source = _pool or _featured
+    return source[k % len(source)] if source else None
+
+
+def _page_bg(item: dict | None = None) -> str:
+    """Background for the hero and chat banner: a MoMA painting, faded behind the text."""
+    item = item or _slot(0)
+    if not item:
+        return "background: #0b0b0c;"
+    img = _e(item["image"])
+    return (
+        "background: linear-gradient(180deg, rgba(10,10,12,.35) 0%, rgba(10,10,12,.82) 70%, "
+        f"rgba(10,10,12,.95) 100%), url('{img}') center 30% / cover no-repeat;"
+    )
+
+
+def _img_bg(i: int) -> str:
+    """Inline background: a distinct MoMA painting under a dark wash, so white text stays readable."""
+    source = _pool or _featured
+    if not source:
+        return "background: #0b0b0c;"
+    img = _e(source[i % len(source)]["image"])
+    return (
+        "background: linear-gradient(180deg, rgba(10,10,12,.30) 0%, rgba(10,10,12,.82) 100%), "
+        f"url('{img}') center / cover no-repeat;"
+    )
+
+
+def visit_html() -> str:
+    """The Visit box, shown between the FAQs and the footer."""
+    return (
+        "<div class='visit'><div><div class='yr'>Visit</div>"
+        "<b>11 West 53rd Street</b>, between Fifth and Sixth Avenues, in Midtown Manhattan. "
+        "Hours, tickets and gallery changes are on moma.org.</div>"
+        "<a href='https://www.moma.org' target='_blank' rel='noopener'>Plan your visit &rarr;</a></div>"
+    )
+
+
 def welcome_html() -> str:
     caps = [
         ("Find a work", "Get the floor and gallery for any artwork on view."),
@@ -806,22 +1000,26 @@ def topbar_html(col) -> str:
 # ---------------------------------------------------------------- UI
 def header_html() -> str:
     return (
-        "<header class='mh'><span class='mh-logo'>AskMoMA</span><nav class='mh-nav'>"
+        "<header class='hdr'><div class='hdr-in'>"
+        "<a class='hdr-brand' href='#'><span class='hdr-mark'>A</span><span class='hdr-name'>AskMoMA</span></a>"
+        "<nav class='hdr-nav' aria-label='MoMA links'>"
         "<a href='https://www.moma.org/visit' target='_blank' rel='noopener'>Visit</a>"
         "<a href='https://www.moma.org/calendar/exhibitions' target='_blank' rel='noopener'>Exhibitions</a>"
         "<a href='https://www.moma.org/artists' target='_blank' rel='noopener'>Art and artists</a>"
-        "</nav></header>"
+        "</nav>"
+        "<a class='hdr-cta' href='https://www.moma.org' target='_blank' rel='noopener'>Visit moma.org &#8599;</a>"
+        "</div></header>"
     )
 
 
 def hero_html() -> str:
     return (
-        f"<section class='hero-wide' style=\"{_bg_style()}\">"
+        f"<section class='hero-wide' style=\"{_page_bg(_slot(0))}\">"
         "<h1>Welcome to AskMoMA</h1>"
         "<p>Your guide to the art on view at The Museum of Modern Art. Ask a question, or pick a floor.</p>"
         + (
-            f"<a class='credit hero-credit' href='{_e(_featured[0]['link'])}' target='_blank' rel='noopener'>"
-            f"Image: {_e(_featured[0]['title'])}, MoMA &#8599;</a>"
+            f"<a class='credit hero-credit' href='{_e(_slot(0)['link'])}' target='_blank' rel='noopener'>"
+            f"Image: {_e(_slot(0)['title'])}, MoMA &#8599;</a>"
             if _featured
             else ""
         )
@@ -837,33 +1035,89 @@ def about_html(col) -> str:
         (f"{artists:,}", "artists"),
         (f"{len(col.floors())}", "floors"),
     ]
-    cards = "".join(f"<div class='stat'><b>{n}</b><span>{label}</span></div>" for n, label in stats)
+    cards = "".join(
+        f"<div class='stat has-img' style=\"{_img_bg(i + 2)}\"><b>{n}</b><span>{label}</span></div>"
+        for i, (n, label) in enumerate(stats)
+    )
+    facts = [
+        (
+            "1929",
+            "Opened in New York",
+            "The museum opened on November 7, 1929, with Alfred H. Barr, Jr. as its first director. "
+            "Abby Aldrich Rockefeller, Lillie P. Bliss and Mary Quinn Sullivan were among its founders.",
+        ),
+        (
+            "1941",
+            "The Starry Night arrives",
+            "Van Gogh's The Starry Night was acquired through the Lillie P. Bliss Bequest. "
+            "It was the first van Gogh to enter a New York museum's collection.",
+        ),
+        (
+            "~200,000",
+            "Works in the collection",
+            "Paintings, sculptures, drawings, prints, photographs, media, architecture and design. "
+            "The collection began with a gift of eight prints and one drawing.",
+        ),
+    ]
+    fact_cards = "".join(
+        f"<div class='fact has-img' style=\"{_img_bg(i + 5)}\"><div class='yr'>{y}</div>"
+        f"<h3>{_e(t)}</h3><p>{_e(d)}</p></div>"
+        for i, (y, t, d) in enumerate(facts)
+    )
     return (
         f"<div class='stats'>{cards}</div>"
-        "<section class='about'><h2>About the collection</h2>"
-        "<p>MoMA's collection covers painting, sculpture, photography, architecture, design and more. "
-        "Pick a floor below, or ask a question in the chat.</p></section>"
+        "<section class='about'><h2>About MoMA</h2>"
+        "<p>The Museum of Modern Art connects people from around the world to the art of our time. "
+        "It is a gathering place for artists, students and visitors, and it cares for one of the "
+        "leading collections of modern and contemporary art.</p>"
+        f"<div class='facts'>{fact_cards}</div>"
+        "</section>"
     )
 
 
 def footer_html(col) -> str:
+    link = "<a href='{u}' target='_blank' rel='noopener'>{t} &#8599;</a>"
     return (
-        "<div class='site-footer'>"
-        "<div><b>AskMoMA</b>"
-        "<p>A student project for MSAI-631 at the University of the Cumberlands. "
-        "Not affiliated with The Museum of Modern Art.</p>"
-        "<a href='https://github.com/chon3806/askmoma' target='_blank' rel='noopener'>View the code on GitHub &#8599;</a>"
-        "</div>"
-        "<div><b>References</b><ul>"
+        "<div class='ft'><div class='ft-grid'>"
+        "<div class='ft-brand'><div class='ft-logo'><span class='hdr-mark'>A</span><span class='hdr-name'>AskMoMA</span></div>"
+        "<p>A guide to the works on view at The Museum of Modern Art, built from MoMA's public collection data.</p>"
+        "<p class='ft-note'>A student project for MSAI-631 at the University of the Cumberlands. "
+        "Not affiliated with The Museum of Modern Art.</p></div>"
+        "<div><h4>Visit MoMA</h4><ul>"
+        + "".join(
+            f"<li>{link.format(u=u, t=t)}</li>"
+            for u, t in [
+                ("https://www.moma.org/visit", "Plan your visit"),
+                ("https://www.moma.org/calendar/exhibitions", "Exhibitions"),
+                ("https://www.moma.org/calendar/events", "Events"),
+                ("https://www.moma.org", "moma.org"),
+            ]
+        )
+        + "</ul></div>"
+        "<div><h4>Collection</h4><ul>"
+        + "".join(
+            f"<li>{link.format(u=u, t=t)}</li>"
+            for u, t in [
+                ("https://www.moma.org/collection/", "Browse the collection"),
+                ("https://www.moma.org/artists", "Artists"),
+                ("https://github.com/MuseumofModernArt/collection", "Open dataset (CC0)"),
+            ]
+        )
+        + "</ul></div>"
+        "<div><h4>References</h4><ul>"
         "<li>Artwork and artist data: MoMA public collection, CC0, "
         "<a href='https://github.com/MuseumofModernArt/collection' target='_blank' rel='noopener'>GitHub dataset</a>"
         f" (as of {_e(col.as_of)}).</li>"
         "<li>Images and work pages: <a href='https://www.moma.org' target='_blank' rel='noopener'>moma.org</a>, "
-        "credited under each image.</li>"
+        "credited under each picture.</li>"
         "<li>Built with Gradio, pandas and scikit-learn.</li>"
-        "<li>Fonts: Inter and Instrument Serif (Google Fonts).</li>"
+        "<li>Fonts: <a href='https://fonts.google.com' target='_blank' rel='noopener'>Inter and Instrument Serif</a> "
+        "(Google Fonts).</li>"
         "</ul></div>"
         "</div>"
+        "<div class='ft-bar'><span>&copy; 2026 AskMoMA student project</span>"
+        "<a href='https://github.com/chon3806/askmoma' target='_blank' rel='noopener'>Source code on GitHub &#8599;</a>"
+        "</div></div>"
     )
 
 
@@ -871,6 +1125,7 @@ def build_ui(bot):
     import gradio as gr
 
     set_featured(bot.col.works)
+    set_pool(bot.col.works)
 
     from askmoma import llm
 
@@ -972,8 +1227,10 @@ def build_ui(bot):
         with gr.Column(elem_id="body"):
             gr.HTML(about_html(col))
             gr.HTML("<p class='sec'>Paintings on view</p>" + featured_html())
-            gr.HTML("<p class='sec'>Browse by floor</p>")
-            with gr.Row(elem_id="floors"):
+            gr.HTML("<p class='sec'>Common FAQs</p>")
+            with gr.Row(elem_id="explore"):
+                explore_btns = [gr.Button(q, elem_classes=["ask-card"]) for q in EXPLORE]
+            with gr.Row(elem_id="floors", visible=False):
                 floor_btns = [
                     gr.Button(
                         f"Floor {f}\n{int(counts.get(f, 0)):,} works",
@@ -982,6 +1239,7 @@ def build_ui(bot):
                     )
                     for f in floors
                 ]
+            gr.HTML(visit_html())
             gr.HTML(footer_html(col))
         with gr.Column(elem_id="chatpanel", visible=False) as panel:
             with gr.Row(elem_id="chat-head"):
@@ -1045,6 +1303,10 @@ def build_ui(bot):
             b.click(
                 functools.partial(add_user, f"What's on floor {f}?"), [hist], [msg, hist, thread], queue=False
             ).then(open_chat, None, [open_state, panel, launch], queue=False).then(**run)
+        for q, b in zip(EXPLORE, explore_btns, strict=True):
+            b.click(functools.partial(add_user, q), [hist], [msg, hist, thread], queue=False).then(
+                open_chat, None, [open_state, panel], queue=False
+            ).then(**run)
         new_chat.click(reset, None, outs)
     demo.askmoma_launch_kwargs = style if gradio6 else {}
     return demo
