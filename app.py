@@ -273,7 +273,7 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
 .mh-nav a {margin-left:28px; color:#0b0b0c; font-weight:700; font-size:1rem; text-decoration:none;}
 .mh-nav a:hover {text-decoration:underline;}
 .hero-wide {min-height:340px; padding:56px 48px; display:flex; flex-direction:column; justify-content:flex-end; color:#ffffff;}
-.hero-wide h1 {font-weight:900; text-transform:uppercase; font-size:clamp(2.4rem, 6vw, 4.8rem); line-height:.95; letter-spacing:-.02em; color:#ffffff; margin:0;}
+.hero-wide h1 {font-weight:900; font-size:clamp(2.4rem, 6vw, 4.8rem); line-height:.95; letter-spacing:-.02em; color:#ffffff; margin:0;}
 .hero-wide p {color:#e4e4e7; font-size:1.1rem; margin:12px 0 0; max-width:60ch;}
 #chatpanel {position:fixed !important; right:24px; bottom:100px; width:min(420px, calc(100vw - 48px)) !important; height:min(620px, 72vh) !important; z-index:1000; background:#ffffff; border-radius:20px; box-shadow:0 24px 60px -20px rgba(0,0,0,.45); border:1px solid #e4e4e7; overflow:auto; padding:14px !important;}
 #chat-launch {position:fixed !important; right:24px; bottom:24px; width:60px !important; min-width:60px !important; height:60px !important; border-radius:999px !important; z-index:1001; background:#0b0b0c !important; color:#ffffff !important; font-weight:700; box-shadow:0 12px 30px -10px rgba(0,0,0,.6); padding:0 !important;}
