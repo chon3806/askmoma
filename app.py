@@ -583,11 +583,18 @@ def set_featured(works) -> None:
             break
 
 
-def _bg_style() -> str:
-    """Background for the welcome card: a MoMA painting, faded behind the text."""
-    if not _featured:
+def _slot(k: int) -> dict | None:
+    """The k-th painting for a background, so each place on the page shows a different one."""
+    source = _pool or _featured
+    return source[k % len(source)] if source else None
+
+
+def _bg_style(item: dict | None = None) -> str:
+    """Background for the hero and chat banner: a MoMA painting, faded behind the text."""
+    item = item or _slot(0)
+    if not item:
         return ""
-    img = _e(_featured[0]["image"])
+    img = _e(item["image"])
     return (
         "background: linear-gradient(180deg, rgba(10,10,12,.35) 0%, rgba(10,10,12,.82) 70%, "
         f"rgba(10,10,12,.95) 100%), url('{img}') center 30% / cover no-repeat;"
@@ -702,12 +709,12 @@ def header_html() -> str:
 
 def hero_html() -> str:
     return (
-        f"<section class='hero-wide' style=\"{_bg_style()}\">"
+        f"<section class='hero-wide' style=\"{_bg_style(_slot(0))}\">"
         "<h1>Welcome to AskMoMA</h1>"
         "<p>Your guide to the art on view at The Museum of Modern Art. Ask a question, or pick a floor.</p>"
         + (
-            f"<a class='credit hero-credit' href='{_e(_featured[0]['link'])}' target='_blank' rel='noopener'>"
-            f"Image: {_e(_featured[0]['title'])}, MoMA &#8599;</a>"
+            f"<a class='credit hero-credit' href='{_e(_slot(0)['link'])}' target='_blank' rel='noopener'>"
+            f"Image: {_e(_slot(0)['title'])}, MoMA &#8599;</a>"
             if _featured
             else ""
         )
@@ -736,7 +743,7 @@ def about_html(col) -> str:
         (f"{len(col.floors())}", "floors"),
     ]
     cards = "".join(
-        f"<div class='stat has-img' style=\"{_img_bg(i)}\"><b>{n}</b><span>{label}</span></div>"
+        f"<div class='stat has-img' style=\"{_img_bg(i + 2)}\"><b>{n}</b><span>{label}</span></div>"
         for i, (n, label) in enumerate(stats)
     )
     facts = [
@@ -760,7 +767,7 @@ def about_html(col) -> str:
         ),
     ]
     fact_cards = "".join(
-        f"<div class='fact has-img' style=\"{_img_bg(i + 3)}\"><div class='yr'>{y}</div>"
+        f"<div class='fact has-img' style=\"{_img_bg(i + 5)}\"><div class='yr'>{y}</div>"
         f"<h3>{_e(t)}</h3><p>{_e(d)}</p></div>"
         for i, (y, t, d) in enumerate(facts)
     )
@@ -782,13 +789,13 @@ def about_html(col) -> str:
 def popup_banner_html() -> str:
     """Painting banner at the top of the chat popup, with the AskMoMA name over it."""
     credit = ""
-    if _featured:
+    if _slot(1):
         credit = (
-            f"<a class='credit pop-credit' href='{_e(_featured[0]['link'])}' target='_blank' rel='noopener'>"
-            f"Image: {_e(_featured[0]['title'])}, MoMA &#8599;</a>"
+            f"<a class='credit pop-credit' href='{_e(_slot(1)['link'])}' target='_blank' rel='noopener'>"
+            f"Image: {_e(_slot(1)['title'])}, MoMA &#8599;</a>"
         )
     return (
-        f"<div class='pop-banner' style=\"{_bg_style()}\">"
+        f"<div class='pop-banner' style=\"{_bg_style(_slot(1))}\">"
         "<div class='pop-title'>Welcome to AskMoMA</div>"
         "<div class='pop-sub'>Ask about the art on view, or pick a floor.</div>"
         f"{credit}</div>"
