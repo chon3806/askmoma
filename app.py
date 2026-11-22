@@ -425,7 +425,15 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
   font-weight:400 !important; color:#0b0b0c !important; letter-spacing:-.015em; line-height:1.1; padding:44px 0 16px !important; margin:0 !important;}
 #body .ask-card, #body .ask-card * {font-size:1.1rem !important;}
 #body .ask-card {font-family:"Inter", system-ui, sans-serif !important;}
-#body .stat span {font-size:1rem !important;}
+#body .stat span {font-size:.85rem !important;}
+#body .stats {gap:12px !important;}
+#body .stat {padding:14px 18px !important; border-radius:14px !important; min-height:0 !important; border:0 !important; background:#0b0b0c;}
+#body .stat b {font-size:1.6rem !important; line-height:1.1; color:#ffffff !important;}
+#body .stat.has-img span {color:#e4e4e7 !important;}
+#body .fact.has-img {border:0 !important; color:#ffffff; min-height:170px;}
+#body .fact.has-img h3 {color:#ffffff !important;}
+#body .fact.has-img p {color:#e4e4e7 !important;}
+#body .fact.has-img .yr {color:#d4d4d8 !important;}
 #body .about p, #body .about li {font-size:1.12rem !important; color:#27272a !important;}
 #body .about h2 {font-family:"Instrument Serif", Georgia, serif !important; font-weight:400 !important; font-size:clamp(2.2rem, 4vw, 3rem) !important;}
 #body .fact h3 {font-size:1.2rem !important;}
@@ -689,6 +697,17 @@ def hero_html() -> str:
     )
 
 
+def _img_bg(i: int) -> str:
+    """Inline background: a MoMA painting under a dark wash, so white text stays readable."""
+    if not _featured:
+        return ""
+    img = _e(_featured[i % len(_featured)]["image"])
+    return (
+        "background: linear-gradient(180deg, rgba(10,10,12,.30) 0%, rgba(10,10,12,.82) 100%), "
+        f"url('{img}') center / cover no-repeat;"
+    )
+
+
 def about_html(col) -> str:
     on = col.works[col.works["on_view"]]
     artists = on.explode("cids")["cids"].dropna().nunique()
@@ -697,7 +716,10 @@ def about_html(col) -> str:
         (f"{artists:,}", "artists"),
         (f"{len(col.floors())}", "floors"),
     ]
-    cards = "".join(f"<div class='stat'><b>{n}</b><span>{label}</span></div>" for n, label in stats)
+    cards = "".join(
+        f"<div class='stat has-img' style=\"{_img_bg(i + 1)}\"><b>{n}</b><span>{label}</span></div>"
+        for i, (n, label) in enumerate(stats)
+    )
     facts = [
         (
             "1929",
@@ -719,8 +741,9 @@ def about_html(col) -> str:
         ),
     ]
     fact_cards = "".join(
-        f"<div class='fact'><div class='yr'>{y}</div><h3>{_e(t)}</h3><p>{_e(d)}</p></div>"
-        for y, t, d in facts
+        f"<div class='fact has-img' style=\"{_img_bg(i + 1)}\"><div class='yr'>{y}</div>"
+        f"<h3>{_e(t)}</h3><p>{_e(d)}</p></div>"
+        for i, (y, t, d) in enumerate(facts)
     )
     return (
         f"<div class='stats'>{cards}</div>"
