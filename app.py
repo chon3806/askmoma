@@ -40,10 +40,10 @@ N_CHIPS = 4
 
 CSS = """/* ---- paintings in the empty margins (wide screens only) ---- */
 #body {position:relative;}
-#gutters {position:absolute !important; top:0; left:0; right:0; bottom:0; height:auto !important; padding:0 !important; margin:0 !important; background:transparent !important; border:0 !important; pointer-events:none; display:none !important;}
-.gut {position:absolute; top:40px; bottom:80px; width:140px; pointer-events:auto;}
-.gut-left {left:calc(-140px - 14px);}
-.gut-right {right:calc(-140px - 14px);}
+#gutters {position:fixed !important; top:120px; bottom:24px; left:0; right:0; height:auto !important; z-index:0; padding:0 !important; margin:0 !important; background:transparent !important; border:0 !important; pointer-events:none; display:none !important;}
+.gut {position:absolute; top:0; bottom:0; width:140px; pointer-events:auto;}
+.gut-left {left:12px;}
+.gut-right {right:12px;}
 .gut-slide {position:absolute; inset:0; border-radius:18px; background-size:cover; background-position:center; opacity:0;
   box-shadow:0 14px 30px -18px rgba(0,0,0,.5); animation-name:gut-fade; animation-iteration-count:infinite;
   animation-timing-function:ease-in-out; animation-fill-mode:both;}
