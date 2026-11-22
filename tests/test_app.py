@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import app
 
 CARD = {
@@ -63,3 +65,12 @@ def test_chat_window_can_be_resized_by_mouse_and_keyboard():
     assert "ArrowLeft" in head and "dblclick" in head  # keyboard, and reset
     assert "Resize the chat window" in head and "Make the chat window larger" in head  # labelled controls
     assert ".chat-size-bar" in app.CSS
+
+
+def test_new_chat_button_sits_in_the_chat_header():
+    src = Path(app.__file__).read_text(encoding="utf-8")
+    head = src[
+        src.index('elem_id="chat-head"') : src.index("popup_banner_html()", src.index('elem_id="chat-head"'))
+    ]
+    assert 'gr.Button("New chat", elem_id="newchat"' in head
+    assert "#chat-head #newchat" in app.CSS

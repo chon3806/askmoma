@@ -376,6 +376,15 @@ body.chat-resizing, body.chat-resizing * {cursor:nwse-resize !important; user-se
 .picked .works {display:flex; flex-direction:column; gap:8px;}
 .tips {font-size:.82rem; color:#52525b; background:#f4f4f5; border-radius:12px; padding:8px 12px; margin:0 0 8px;}
 .tips b {color:#0b0b0c;}
+/* "New chat": a small outlined pill in the chat header, left of the close button. */
+#chat-head {flex-wrap:nowrap !important;}
+#chat-head > :first-child {flex:1 1 auto !important; min-width:0 !important;}
+#chat-head #newchat {flex:0 0 auto !important; width:auto !important; min-width:0 !important; height:36px !important;
+  padding:0 16px !important; border-radius:999px !important; background:#ffffff !important; color:#0b0b0c !important;
+  border:1.5px solid #a1a1aa !important; font-size:.9rem !important; font-weight:700 !important; box-shadow:none !important;
+  white-space:nowrap !important;}
+#chat-head #newchat:hover {border-color:#0b0b0c !important; background:#f4f4f5 !important;}
+#chat-head #newchat:focus-visible {outline:2px solid #0b0b0c !important; outline-offset:2px;}
 """
 
 # The chat window sits at the bottom right, so it grows up and to the left: a grip
@@ -891,11 +900,12 @@ def build_ui(bot):
                     "<div class='chat-head-text'><div class='chat-title'>AskMoMA</div>"
                     "<div class='chat-sub'>Museum guide for works on view</div></div>"
                 )
+                # "New chat" sits in the header, beside the close button, so it is always in reach.
+                new_chat = gr.Button("New chat", elem_id="newchat", size="sm")
                 close_btn = gr.Button("✕", elem_id="chat-close", size="sm")
             gr.HTML(popup_banner_html())
             # The chat opens straight on the conversation; popular questions are the first chips.
             with gr.Column(elem_id="pane-messages"):
-                new_chat = gr.Button("New conversation", elem_id="newchat", size="sm")
                 thread = gr.HTML(thread_html([]))
                 # "Did that answer your question?" (week 7 CUX redesign; week 9-10 task success).
                 with gr.Row(elem_id="feedback", visible=False) as fb_row:
