@@ -461,6 +461,8 @@ button.primary {background:#0b0b0c !important; border-color:#0b0b0c !important;}
   .hdr-nav {display:none;}
   .hdr-cta {font-size:.84rem; padding:9px 14px;}
 }
+#body .visit, #body .visit div {color:#d4d4d8 !important;}
+#body .visit b {color:#ffffff !important;}
 @media (max-width: 600px) {
   #chatpanel {left:10px !important; right:10px !important; width:auto !important; bottom:86px !important; height:76vh !important;}
   #chat-launch {right:16px !important; bottom:16px !important;}
@@ -547,6 +549,7 @@ FEATURED_TITLES = [
     "The Persistence of Memory",
 ]
 _featured: list[dict] = []  # filled by build_ui from the works on view
+_pool: list[dict] = []  # more on-view paintings for card backgrounds, one per artist
 
 
 def set_featured(works) -> None:
@@ -562,6 +565,21 @@ def set_featured(works) -> None:
                 {"title": title, "artist": row["Artist"], "image": row["ImageURL"], "link": row["link"]}
             )
         if len(_featured) == 3:
+            break
+    # A pool of other paintings on view (one per artist, none already featured) for card backgrounds.
+    _pool.clear()
+    used = {f["image"] for f in _featured}
+    paint = works[
+        (works["Classification"] == "Painting") & (works["on_view"].astype(bool)) & works["ImageURL"].notna()
+    ]
+    seen_artists: set = set()
+    for _, row in paint.iterrows():
+        if row["ImageURL"] in used or row["Artist"] in seen_artists:
+            continue
+        seen_artists.add(row["Artist"])
+        used.add(row["ImageURL"])
+        _pool.append({"title": row["Title"], "image": row["ImageURL"], "link": row["link"]})
+        if len(_pool) >= 12:
             break
 
 
@@ -698,10 +716,11 @@ def hero_html() -> str:
 
 
 def _img_bg(i: int) -> str:
-    """Inline background: a MoMA painting under a dark wash, so white text stays readable."""
-    if not _featured:
+    """Inline background: a distinct MoMA painting under a dark wash, so white text stays readable."""
+    source = _pool or _featured
+    if not source:
         return ""
-    img = _e(_featured[i % len(_featured)]["image"])
+    img = _e(source[i % len(source)]["image"])
     return (
         "background: linear-gradient(180deg, rgba(10,10,12,.30) 0%, rgba(10,10,12,.82) 100%), "
         f"url('{img}') center / cover no-repeat;"
@@ -717,7 +736,7 @@ def about_html(col) -> str:
         (f"{len(col.floors())}", "floors"),
     ]
     cards = "".join(
-        f"<div class='stat has-img' style=\"{_img_bg(i + 1)}\"><b>{n}</b><span>{label}</span></div>"
+        f"<div class='stat has-img' style=\"{_img_bg(i)}\"><b>{n}</b><span>{label}</span></div>"
         for i, (n, label) in enumerate(stats)
     )
     facts = [
@@ -741,7 +760,7 @@ def about_html(col) -> str:
         ),
     ]
     fact_cards = "".join(
-        f"<div class='fact has-img' style=\"{_img_bg(i + 1)}\"><div class='yr'>{y}</div>"
+        f"<div class='fact has-img' style=\"{_img_bg(i + 3)}\"><div class='yr'>{y}</div>"
         f"<h3>{_e(t)}</h3><p>{_e(d)}</p></div>"
         for i, (y, t, d) in enumerate(facts)
     )
