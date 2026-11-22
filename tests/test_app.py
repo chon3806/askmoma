@@ -70,7 +70,10 @@ def test_chat_window_can_be_resized_by_mouse_and_keyboard():
 def test_new_chat_button_sits_in_the_chat_header():
     src = Path(app.__file__).read_text(encoding="utf-8")
     head = src[
-        src.index('elem_id="chat-head"') : src.index("popup_banner_html()", src.index('elem_id="chat-head"'))
+        # The header ends where the conversation pane begins (the banner between them was removed).
+        src.index('elem_id="chat-head"') : src.index(
+            'elem_id="pane-messages"', src.index('elem_id="chat-head"')
+        )
     ]
     assert 'gr.Button("New chat", elem_id="newchat"' in head
     assert "#chat-head #newchat" in app.CSS

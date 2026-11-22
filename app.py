@@ -31,7 +31,7 @@ STARTERS = [
     "Which artists have the most works on floor 5?",
     "Find dreamy night sky paintings",
 ]
-N_CHIPS = 4
+N_CHIPS = 3  # one row of suggestions in the chat window
 
 CSS = """
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
@@ -367,13 +367,56 @@ body.chat-resizing, body.chat-resizing * {cursor:nwse-resize !important; user-se
 #feedback .fb-btn:hover {border-color:#0b0b0c !important;}
 /* Suggestion chips: an arrow reads as "ask this"; a check mark read as "done" or "selected". */
 #chips button::before {content:"\\2192" !important;}
+/* In the chat window the conversation starts at the top and has no scroll area of its own
+   (the full-page layout anchored it to the bottom with a 380px minimum, leaving a gap). */
+#chatpanel .thread {height:auto !important; min-height:0 !important; overflow:visible !important;
+  flex-direction:column !important; padding:0 4px !important;}
+#chatpanel .thread .inner {padding:4px 0 8px !important; gap:16px !important;}
+/* The header stays at the top while the conversation scrolls; the resize controls sit in it. */
+#chatpanel #chat-head {position:sticky !important; top:-14px; z-index:8; background:#ffffff;}
+/* More specific than the header's "first item grows" rule, which would squeeze these two buttons. */
+#chatpanel #chat-head > .chat-size-bar {position:static; height:auto; display:flex !important; flex-direction:row !important;
+  flex-wrap:nowrap !important; align-items:center; gap:6px; flex:0 0 62px !important; width:62px !important;
+  min-width:62px !important; margin:0 !important;}
+#chatpanel #chat-head > .chat-size-bar button {position:static; flex:0 0 28px; width:28px; height:28px; margin:0;}
+#chat-head > .chat-size-bar + * {flex:1 1 auto !important; min-width:0 !important;}  /* title fills, "New chat" stays right */
+#chatpanel .row-u, #chatpanel .row-a {scroll-margin-top:60px;}  /* "show latest" stops below the pinned header */
+/* A compact header: title, a short subtitle on the same line, and the close button. */
+#chatpanel #chat-head {padding:8px 12px !important; margin:-14px -14px 8px !important; min-height:52px !important;
+  height:52px !important; flex-wrap:nowrap !important; align-items:center !important; box-sizing:border-box;
+  border-bottom:1px solid #e4e4e7;}
+#chatpanel .chat-sub {display:none !important;}  /* the greeting already says what AskMoMA is */
+#chatpanel .chat-head-text {flex-direction:row !important; align-items:baseline; gap:8px;}
+#chatpanel .chat-title {font-size:1rem !important;}
+#chatpanel #chat-close {min-width:36px !important; max-width:36px !important; height:36px !important;}  /* same height as "New chat" */
+/* Suggestions in one row that scrolls sideways, instead of a stack. */
+#chatpanel #chips {flex-wrap:nowrap !important; overflow-x:auto; padding-bottom:4px; scrollbar-width:thin;}
+#chatpanel #chips button {flex:0 0 auto !important; white-space:nowrap !important;}
+/* A short-lived note after "Yes" (visibility of system status). */
+.fb-thanks {position:fixed; right:96px; bottom:36px; z-index:1002; margin:0; padding:8px 14px; border-radius:999px;
+  background:#0b0b0c; color:#ffffff; font-size:.85rem; box-shadow:0 8px 20px -8px rgba(0,0,0,.5);}
+/* Phones: no resize controls or avatar column; the message box keeps its Send button. */
+@media (max-width: 600px) {
+  .chat-size-bar {display:none !important;}
+  #chatpanel .avatar {display:none !important;}
+  #chatpanel #composer {padding:0 !important;}
+  #chatpanel #ask textarea {font-size:.95rem !important;}
+  #feedback {margin-left:0 !important;}
+}
 /* The message box stays in view at the bottom of the chat window while the conversation
    scrolls, so the next question is always one tap away; "Picked for you" sits below it. */
+/* A sticky element only moves within its parent; letting the composer's children belong to the
+   whole conversation column means the box can rise to the bottom edge from anywhere. */
+#chatpanel #composer {display:contents !important;}
 #chatpanel #ask {position:sticky !important; bottom:-14px; z-index:6; box-shadow:0 0 0 10px #ffffff, 0 -6px 18px 8px #ffffff !important;}
-.picked {margin:10px 0 2px; padding:10px 12px 4px; border:1px solid #e4e4e7; border-radius:14px; background:#fafafa;}
-.picked-h {font-size:.82rem; font-weight:700; color:#0b0b0c; margin:0 0 6px;}
-.picked-h span {font-weight:400; color:#52525b; margin-left:6px;}
-.picked .works {display:flex; flex-direction:column; gap:8px;}
+.picked {margin:10px 0 2px; padding:6px 10px; border:1px solid #e4e4e7; border-radius:12px; background:#fafafa;}
+.picked summary {cursor:pointer; font-size:.82rem; font-weight:700; color:#0b0b0c; padding:2px 0;}
+.picked summary span {font-weight:400; color:#52525b;}
+.pk {display:flex; align-items:center; gap:10px; padding:6px 0; text-decoration:none !important; color:#0b0b0c; border-top:1px solid #f0f0f1;}
+.pk:hover b {text-decoration:underline;}
+.pk-thumb {flex:0 0 36px; height:36px; border-radius:6px; background:#e4e4e7 center/cover no-repeat;}
+.pk-text {font-size:.82rem; line-height:1.3; min-width:0;}
+.pk-text small {display:block; color:#52525b; font-size:.76rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 .tips {font-size:.82rem; color:#52525b; background:#f4f4f5; border-radius:12px; padding:8px 12px; margin:0 0 8px;}
 .tips b {color:#0b0b0c;}
 /* "New chat": a small outlined pill in the chat header, left of the close button. */
@@ -419,14 +462,22 @@ CHAT_RESIZE_HEAD = """
   }
 
   function setup(panel) {
-    if (panel.querySelector(".chat-size-bar")) return;
+    const existing = panel.querySelector(".chat-size-bar");
+    if (existing) {
+      // Gradio may draw the header after the window: move the controls into it once it exists.
+      const h = panel.querySelector("#chat-head");
+      if (h && existing.parentElement !== h) h.prepend(existing);
+      return;
+    }
     const bar = document.createElement("div");
     bar.className = "chat-size-bar";
     bar.innerHTML =
       '<button type="button" class="chat-grip" aria-label="Resize the chat window: drag, or use the arrow keys" ' +
       'title="Drag to resize (double-click to reset)">\\u21F1</button>' +
       '<button type="button" class="chat-expand"></button>';
-    panel.prepend(bar);
+    // Inside the header (left of the title), so the controls never cover the conversation.
+    const head = panel.querySelector("#chat-head");
+    if (head) head.prepend(bar); else panel.prepend(bar);
     const grip = bar.querySelector(".chat-grip"), expand = bar.querySelector(".chat-expand");
     const current = () => { const r = panel.getBoundingClientRect(); return {w: r.width, h: r.height}; };
     apply(panel, load());
@@ -466,7 +517,7 @@ CHAT_RESIZE_HEAD = """
   // and opening the Messages tab puts the cursor in the message box.
   document.addEventListener("keydown", (e) => {
     const p = document.getElementById("chatpanel");
-    if (e.key === "Escape" && p && p.offsetParent !== null) document.getElementById("chat-close")?.click();
+    if (e.key === "Escape" && p && p.getClientRects().length > 0) document.getElementById("chat-launch")?.click();
   });
   // Keep the latest exchange in view: scroll so the newest question (or a reply with no
   // question, such as a repair) sits at the top of the chat window, with its answer below.
@@ -480,7 +531,10 @@ CHAT_RESIZE_HEAD = """
     lastKey = key;
     const prev = last.previousElementSibling;
     const target = last.classList.contains("row-a") && prev && prev.classList.contains("row-u") ? prev : last;
-    requestAnimationFrame(() => target.scrollIntoView({block: "start", behavior: "smooth"}));
+    // Jump (not smooth), then again once images and "Picked for you" have settled the layout.
+    const go = () => target.isConnected && target.scrollIntoView({block: "start"});
+    requestAnimationFrame(go);
+    setTimeout(go, 450);
   }
   document.addEventListener("click", (e) => {
     if (e.target.closest(".floor-card, #chatpanel #chips button, #chat-launch")) {
@@ -488,7 +542,45 @@ CHAT_RESIZE_HEAD = """
     }
   });
 
-  const scan = () => { const p = document.getElementById("chatpanel"); if (p) { setup(p); showLatest(false); } };
+  // Screen readers (WCAG 4.1.2): the chat is a labelled dialog, the close button has a name,
+  // and the Ask button says whether the chat is open. Closing returns focus to Ask (2.4.3).
+  // Gradio removes the closed chat from the page, and offsetParent is always null for a
+  // fixed-position element, so "open" means: the window exists and takes up space.
+  const isOpen = (p) => !!p && p.getClientRects().length > 0;
+  let wasOpen = false;
+  function a11y(p) {
+    const open = isOpen(p);
+    if (p) {
+      p.setAttribute("role", "dialog");
+      p.setAttribute("aria-label", "AskMoMA chat");
+    }
+    const launch = document.getElementById("chat-launch");
+    if (launch) {
+      launch.setAttribute("aria-controls", "chatpanel");
+      launch.setAttribute("aria-expanded", String(open));
+      launch.setAttribute("aria-label", open ? "Close the AskMoMA chat" : "Open the AskMoMA chat");
+      if (wasOpen && !open) launch.focus();
+    }
+    wasOpen = open;
+  }
+  // After "Yes", a short note confirms the feedback. It lives outside Gradio's components,
+  // which are rebuilt on every update, and sits just above the Ask button.
+  document.addEventListener("click", (e) => {
+    const yes = e.target.closest("#feedback .fb-btn");
+    if (!yes || !/Yes/.test(yes.innerText)) return;
+    const note = document.createElement("p");
+    note.className = "fb-thanks";
+    note.setAttribute("role", "status");
+    note.textContent = "Thanks for the feedback.";
+    document.body.appendChild(note);
+    setTimeout(() => note.remove(), 2000);
+  });
+
+  const scan = () => {
+    const p = document.getElementById("chatpanel");
+    if (p) { setup(p); showLatest(false); }
+    a11y(p);
+  };
   new MutationObserver(scan).observe(document.documentElement, {childList: true, subtree: true});
   window.addEventListener("resize", () => { const p = document.getElementById("chatpanel"); if (p) apply(p, load()); });
   scan();
@@ -680,13 +772,26 @@ def thread_html(history: list) -> str:
 
 
 def picked_html(cards: list[dict]) -> str:
-    """The "Picked for you" panel: up to three works on view, each saying why."""
+    """The "Picked for you" panel: up to three works on view, one compact row each, saying why."""
     if not cards:
         return ""
+    rows = []
+    for c in cards[:3]:
+        img = c.get("image") or ""
+        thumb = (
+            f"<span class='pk-thumb' style=\"background-image:url('{_e(img)}')\"></span>"
+            if img.startswith("http")
+            else "<span class='pk-thumb'></span>"
+        )
+        where = c["location"] if c["on_view"] else "Not on view"
+        rows.append(
+            f"<a class='pk' href='{_e(c['link'])}' target='_blank' rel='noopener'>{thumb}"
+            f"<span class='pk-text'><b>{_e(c['title'])}</b> · {_e(c['artist'])}"
+            f"<small>{_e(where)} · {_e(c['reason'])}</small></span></a>"
+        )
     return (
-        "<section class='picked' aria-label='Picked for you'>"
-        "<p class='picked-h'>Picked for you <span>based on this conversation</span></p>"
-        f"{works_html(cards, limit=3)}</section>"
+        "<details class='picked' open><summary>Picked for you "
+        f"<span>({len(rows)}, based on this conversation)</span></summary>{''.join(rows)}</details>"
     )
 
 
@@ -738,22 +843,6 @@ def about_html(col) -> str:
         "<section class='about'><h2>About the collection</h2>"
         "<p>MoMA's collection covers painting, sculpture, photography, architecture, design and more. "
         "Pick a floor below, or ask a question in the chat.</p></section>"
-    )
-
-
-def popup_banner_html() -> str:
-    """Painting banner at the top of the chat popup, with the AskMoMA name over it."""
-    credit = ""
-    if _featured:
-        credit = (
-            f"<a class='credit pop-credit' href='{_e(_featured[0]['link'])}' target='_blank' rel='noopener'>"
-            f"Image: {_e(_featured[0]['title'])}, MoMA &#8599;</a>"
-        )
-    return (
-        f"<div class='pop-banner' style=\"{_bg_style()}\">"
-        "<div class='pop-title'>Welcome to AskMoMA</div>"
-        "<div class='pop-sub'>Ask about the art on view, or pick a floor.</div>"
-        f"{credit}</div>"
     )
 
 
@@ -823,12 +912,12 @@ def build_ui(bot):
         answered = [h for h in history if h[0] and h[1] and "I couldn't find" not in h[1]]
         return len(answered) < 2
 
-    def answer(history, ctx, on_view_only):
+    def answer(history, ctx):
         history = list(history or [])
         if not history or history[-1][1]:
             return [thread_html(history), history, ctx] + [gr.update()] * (N_CHIPS + len(floors) + 3)
         question = history[-1][0]
-        ans = bot.ask(question, ctx, on_view_only=on_view_only)
+        ans = bot.ask(question, ctx)
         text = llm.polish(question, ans.text)  # unchanged unless ASKMOMA_LLM is set
         history[-1][1], history[-1][2] = md(text), ans.cards
         hit = set()
@@ -902,8 +991,6 @@ def build_ui(bot):
                 )
                 # "New chat" sits in the header, beside the close button, so it is always in reach.
                 new_chat = gr.Button("New chat", elem_id="newchat", size="sm")
-                close_btn = gr.Button("✕", elem_id="chat-close", size="sm")
-            gr.HTML(popup_banner_html())
             # The chat opens straight on the conversation; popular questions are the first chips.
             with gr.Column(elem_id="pane-messages"):
                 thread = gr.HTML(thread_html([]))
@@ -915,10 +1002,8 @@ def build_ui(bot):
                 with gr.Column(elem_id="composer"):
                     # Adaptive guidance (week 13): shown to newcomers, hidden once they are under way.
                     tips = gr.HTML(
-                        "<p class='tips'><b>Tips:</b> ask where a work is (<i>Where is The Starry Night?</i>), "
-                        "about an artist or a floor, or what to see next "
-                        "(<i>I loved Water Lilies but not Flag</i>). These tips hide after a couple of "
-                        "answers; type <i>help</i> to see examples again.</p>"
+                        "<p class='tips'>Try <i>Where is Water Lilies?</i> or <i>I loved X but not Y</i>. "
+                        "Type <i>help</i> for more.</p>"
                     )
                     with gr.Row(elem_id="chips"):
                         chips = [gr.Button(q, size="sm") for q in STARTERS[:N_CHIPS]]
@@ -935,29 +1020,22 @@ def build_ui(bot):
                     )
                     # Proactive picks under the message box (week 11's "Picked for you").
                     picked = gr.HTML("", elem_id="picked")
-                    gr.HTML(
-                        "<p class='fine'>Gallery locations can change. Check the moma.org link before you go.</p>"
-                    )
-                with gr.Row(elem_id="opts"):
-                    on_view_only = gr.Checkbox(
-                        value=True, label="Only list works that are on view", container=False
-                    )
+                    # No standing disclaimer: every artwork answer states the data date and links to
+                    # moma.org, which is where a visitor confirms a location.
         launch = gr.Button("Ask", elem_id="chat-launch")
 
+        # One button opens and closes the chat, in the same place: "Ask" when closed, "✕" when open.
         def toggle(is_open):
-            return (not is_open), gr.update(visible=not is_open)
-
-        def close_chat():
-            return False, gr.update(visible=False)
+            opening = not is_open
+            return opening, gr.update(visible=opening), gr.update(value="✕" if opening else "Ask")
 
         def open_chat():
-            return True, gr.update(visible=True)
+            return True, gr.update(visible=True), gr.update(value="✕")
 
-        launch.click(toggle, [open_state], [open_state, panel], queue=False)
-        close_btn.click(close_chat, None, [open_state, panel], queue=False)
+        launch.click(toggle, [open_state], [open_state, panel, launch], queue=False)
 
         outs = [thread, hist, ctx, *chips, *floor_btns, fb_row, tips, picked]
-        run = dict(fn=answer, inputs=[hist, ctx, on_view_only], outputs=outs)
+        run = dict(fn=answer, inputs=[hist, ctx], outputs=outs)
         fb_up.click(helpful, [ctx], [fb_row], queue=False)
         fb_down.click(not_helpful, [hist, ctx], outs, queue=False)
         msg.submit(add_user, [msg, hist], [msg, hist, thread], queue=False).then(**run)
@@ -966,7 +1044,7 @@ def build_ui(bot):
         for f, b in zip(floors, floor_btns, strict=True):
             b.click(
                 functools.partial(add_user, f"What's on floor {f}?"), [hist], [msg, hist, thread], queue=False
-            ).then(open_chat, None, [open_state, panel], queue=False).then(**run)
+            ).then(open_chat, None, [open_state, panel, launch], queue=False).then(**run)
         new_chat.click(reset, None, outs)
     demo.askmoma_launch_kwargs = style if gradio6 else {}
     return demo
