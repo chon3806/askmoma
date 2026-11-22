@@ -41,14 +41,14 @@ N_CHIPS = 4
 CSS = """/* ---- paintings in the empty margins (wide screens only) ---- */
 #body {position:relative;}
 #gutters {position:fixed !important; top:120px; bottom:24px; left:0; right:0; height:auto !important; z-index:0; padding:0 !important; margin:0 !important; background:transparent !important; border:0 !important; pointer-events:none; display:none !important;}
-.gut {position:absolute; top:0; bottom:0; width:140px; pointer-events:auto;}
-.gut-left {left:12px;}
-.gut-right {right:12px;}
+.gut {position:absolute; top:0; bottom:0; width:120px; pointer-events:auto;}
+.gut-left {left:10px;}
+.gut-right {right:10px;}
 .gut-slide {position:absolute; inset:0; border-radius:18px; background-size:cover; background-position:center; opacity:0;
   box-shadow:0 14px 30px -18px rgba(0,0,0,.5); animation-name:gut-fade; animation-iteration-count:infinite;
   animation-timing-function:ease-in-out; animation-fill-mode:both;}
 @keyframes gut-fade {0% {opacity:0} 4% {opacity:1} 21% {opacity:1} 25% {opacity:0} 100% {opacity:0}}
-@media (min-width: 1500px) {#gutters {display:block !important;}}
+@media (min-width: 1400px) {#gutters {display:block !important;}}
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
 
