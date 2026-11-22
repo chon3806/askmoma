@@ -365,6 +365,15 @@ body.chat-resizing, body.chat-resizing * {cursor:nwse-resize !important; user-se
 #feedback .fb-btn {flex:0 0 auto !important; min-width:0 !important; padding:4px 12px !important; border-radius:999px !important;
   background:#ffffff !important; color:#0b0b0c !important; border:1px solid #d4d4d8 !important; font-size:.85rem !important;}
 #feedback .fb-btn:hover {border-color:#0b0b0c !important;}
+/* Suggestion chips: an arrow reads as "ask this"; a check mark read as "done" or "selected". */
+#chips button::before {content:"\\2192" !important;}
+/* The message box stays in view at the bottom of the chat window while the conversation
+   scrolls, so the next question is always one tap away; "Picked for you" sits below it. */
+#chatpanel #ask {position:sticky !important; bottom:-14px; z-index:6; box-shadow:0 0 0 10px #ffffff, 0 -6px 18px 8px #ffffff !important;}
+.picked {margin:10px 0 2px; padding:10px 12px 4px; border:1px solid #e4e4e7; border-radius:14px; background:#fafafa;}
+.picked-h {font-size:.82rem; font-weight:700; color:#0b0b0c; margin:0 0 6px;}
+.picked-h span {font-weight:400; color:#52525b; margin-left:6px;}
+.picked .works {display:flex; flex-direction:column; gap:8px;}
 .tips {font-size:.82rem; color:#52525b; background:#f4f4f5; border-radius:12px; padding:8px 12px; margin:0 0 8px;}
 .tips b {color:#0b0b0c;}
 """
@@ -661,6 +670,17 @@ def thread_html(history: list) -> str:
     )
 
 
+def picked_html(cards: list[dict]) -> str:
+    """The "Picked for you" panel: up to three works on view, each saying why."""
+    if not cards:
+        return ""
+    return (
+        "<section class='picked' aria-label='Picked for you'>"
+        "<p class='picked-h'>Picked for you <span>based on this conversation</span></p>"
+        f"{works_html(cards, limit=3)}</section>"
+    )
+
+
 def topbar_html(col) -> str:
     return (
         "<div class='topbar'><div class='t'>Museum guide<small>Answers come from MoMA's public collection data</small></div>"
@@ -797,7 +817,7 @@ def build_ui(bot):
     def answer(history, ctx, on_view_only):
         history = list(history or [])
         if not history or history[-1][1]:
-            return [thread_html(history), history, ctx] + [gr.update()] * (N_CHIPS + len(floors) + 2)
+            return [thread_html(history), history, ctx] + [gr.update()] * (N_CHIPS + len(floors) + 3)
         question = history[-1][0]
         ans = bot.ask(question, ctx, on_view_only=on_view_only)
         text = llm.polish(question, ans.text)  # unchanged unless ASKMOMA_LLM is set
@@ -812,6 +832,7 @@ def build_ui(bot):
             + chip_updates(ans.suggestions)
             + [gr.update(variant="primary" if f in hit else "secondary") for f in floors]
             + [gr.update(visible=ans.intent not in no_feedback), gr.update(visible=guidance(history))]
+            + [picked_html(bot.picked_for_you(ans.context, exclude=[c["row"] for c in ans.cards]))]
         )
 
     def not_helpful(history, ctx):
@@ -825,6 +846,7 @@ def build_ui(bot):
             + chip_updates(ans.suggestions)
             + [gr.update() for _ in floors]
             + [gr.update(visible=False), gr.update(visible=guidance(history))]
+            + [gr.update()]
         )
 
     def helpful(ctx):
@@ -837,6 +859,7 @@ def build_ui(bot):
             + chip_updates(STARTERS)
             + [gr.update(variant="secondary") for _ in floors]
             + [gr.update(visible=False), gr.update(visible=True)]
+            + [""]
         )
 
     # Gradio 6 moved theme and css from Blocks() to launch().
@@ -900,6 +923,8 @@ def build_ui(bot):
                         lines=1,
                         max_lines=4,
                     )
+                    # Proactive picks under the message box (week 11's "Picked for you").
+                    picked = gr.HTML("", elem_id="picked")
                     gr.HTML(
                         "<p class='fine'>Gallery locations can change. Check the moma.org link before you go.</p>"
                     )
@@ -921,7 +946,7 @@ def build_ui(bot):
         launch.click(toggle, [open_state], [open_state, panel], queue=False)
         close_btn.click(close_chat, None, [open_state, panel], queue=False)
 
-        outs = [thread, hist, ctx, *chips, *floor_btns, fb_row, tips]
+        outs = [thread, hist, ctx, *chips, *floor_btns, fb_row, tips, picked]
         run = dict(fn=answer, inputs=[hist, ctx, on_view_only], outputs=outs)
         fb_up.click(helpful, [ctx], [fb_row], queue=False)
         fb_down.click(not_helpful, [hist, ctx], outs, queue=False)

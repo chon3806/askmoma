@@ -172,6 +172,9 @@ class AskMoMA:
             if cids:
                 new_ctx["artist_cid"] = cids[0]
         ans.context = {**(context or {}), **new_ctx}
+        if new_ctx.get("work_row") is not None:
+            row = int(new_ctx["work_row"])
+            ans.context["recent"] = [row, *[r for r in ans.context.get("recent", []) if r != row]][:5]
         if ans.intent != "disambiguate":
             ans.context.pop("choices", None)  # "None of these" only answers the question just asked
         # Remembered so "Not helpful" can offer a repair that fits the last answer.
@@ -439,41 +442,16 @@ class AskMoMA:
         return [r for _, r in sorted(scored, key=lambda x: -x[0])]
 
     def _recommend_from_profile(self, liked_rows, disliked_rows, floor_filter=None) -> Answer:
-        """Several likes and dislikes, as in the week 11 recommender: a Rocchio profile
-        (mean of liked works minus half the mean of disliked ones), then maximal
-        marginal relevance so the list is not ten near-copies."""
+        """Several likes and dislikes, as in the week 11 recommender."""
         works = self.col.works
 
         def one(rows):  # the work on view, if the title is shared
             return next((r for r in rows if works.at[r, "on_view"]), rows[0])
 
         liked, disliked = [one(r) for r in liked_rows], [one(r) for r in disliked_rows]
-        vecs = {r: self.search.vector(r) for r in liked + disliked}
-        liked_v = [vecs[r] for r in liked if vecs[r] is not None]
-        if not liked_v:
+        picks = self._profile_picks(liked, disliked, n=6, floor_filter=floor_filter)
+        if picks is None:
             return self._h_unknown(Parsed(text="", intent="unknown"))
-        profile = np.mean(liked_v, axis=0)
-        disliked_v = [vecs[r] for r in disliked if vecs[r] is not None]
-        if disliked_v:
-            profile = profile - DISLIKE_WEIGHT * np.mean(disliked_v, axis=0)
-        profile = profile / (np.linalg.norm(profile) or 1.0)
-
-        # Leave out the works named, and other panels of them (Monet made several "Water Lilies").
-        named = {(works.at[r, "title_norm"], works.at[r, "Artist"]) for r in liked + disliked}
-        same = works["title_norm"].isin({t for t, _ in named}) & works["Artist"].isin({a for _, a in named})
-        exclude = set(liked) | set(disliked) | set(works.index[same])
-        candidates = [
-            (r, s) for r, s in self.search.rank(profile, k=40, exclude=exclude) if works.at[r, "on_view"]
-        ]
-        if floor_filter:
-            candidates = [(r, s) for r, s in candidates if works.at[r, "floor"] == floor_filter] or candidates
-        chosen = self._mmr(candidates, n=6)
-
-        picks = []
-        for r in chosen:
-            v = self.search.vector(r)
-            closest = max(liked, key=lambda lr: float(v @ vecs[lr]) if vecs[lr] is not None else -1.0)
-            picks.append((r, f"Close to {self._card(closest)['title']}"))
         names = [f"**{self._card(r)['title']}**" for r in liked]
         intro = "Because you liked " + (
             " and ".join(names) if len(names) < 3 else ", ".join(names[:-1]) + f", and {names[-1]}"
@@ -483,6 +461,50 @@ class AskMoMA:
         if not picks:
             return Answer(text=intro + ", I couldn't find other works on view to suggest." + self._as_of())
         return self._recommendation_answer(intro + ", try these:", picks, liked, liked[0], disliked)
+
+    def _profile_picks(self, liked, disliked=(), n=6, floor_filter=None, exclude=()) -> list | None:
+        """Works on view for a Rocchio profile (mean of liked works minus half the mean of
+        disliked ones), chosen with maximal marginal relevance so the list is not near-copies.
+        Each pick names the liked work it is closest to. None if no liked work has a vector."""
+        works = self.col.works
+        vecs = {r: self.search.vector(r) for r in [*liked, *disliked]}
+        liked_v = [vecs[r] for r in liked if vecs[r] is not None]
+        if not liked_v:
+            return None
+        profile = np.mean(liked_v, axis=0)
+        disliked_v = [vecs[r] for r in disliked if vecs[r] is not None]
+        if disliked_v:
+            profile = profile - DISLIKE_WEIGHT * np.mean(disliked_v, axis=0)
+        profile = profile / (np.linalg.norm(profile) or 1.0)
+
+        # Leave out the works named, and other panels of them (Monet made several "Water Lilies").
+        named_rows = [*liked, *disliked]
+        named = {(works.at[r, "title_norm"], works.at[r, "Artist"]) for r in named_rows}
+        same = works["title_norm"].isin({t for t, _ in named}) & works["Artist"].isin({a for _, a in named})
+        skip = set(named_rows) | set(works.index[same]) | set(exclude)
+        candidates = [
+            (r, s) for r, s in self.search.rank(profile, k=40, exclude=skip) if works.at[r, "on_view"]
+        ]
+        if floor_filter:
+            candidates = [(r, s) for r, s in candidates if works.at[r, "floor"] == floor_filter] or candidates
+        picks = []
+        for r in self._mmr(candidates, n=n):
+            v = self.search.vector(r)
+            closest = max((lr for lr in liked if vecs[lr] is not None), key=lambda lr: float(v @ vecs[lr]))
+            picks.append((r, f"Close to {self._card(closest)['title']}"))
+        return picks
+
+    def picked_for_you(self, context: dict | None, n: int = 3, exclude=()) -> list[dict]:
+        """Proactive picks for the panel under the message box (week 11's "Picked for you"):
+        works on view close to the works this conversation has been about, and away from
+        any disliked. Empty until the visitor has asked about a work."""
+        context = context or {}
+        recent = [r for r in context.get("recent", []) if r in self.col.works.index]
+        liked = list(dict.fromkeys([*context.get("liked", []), *recent]))[:5]
+        if not liked:
+            return []
+        picks = self._profile_picks(liked, context.get("disliked", []), n=n, exclude=exclude) or []
+        return [self._card(r, why) for r, why in picks]
 
     def _mmr(self, candidates: list[tuple[int, float]], n: int) -> list[int]:
         """Maximal marginal relevance: each pick balances relevance against similarity to earlier picks."""

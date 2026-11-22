@@ -108,3 +108,21 @@ def test_none_of_these_asks_for_the_artist_instead_of_guessing(bot):
     assert "choices" not in b.context
     # Only the question just asked can be answered with "none of these".
     assert bot.ask("none", b.context).intent != "clarify"
+
+
+# ------------------------------------------------------------ picked for you
+
+
+def test_picked_for_you_follows_the_conversation(bot):
+    assert bot.picked_for_you({}) == []  # nothing until the visitor asks about a work
+    a = bot.ask("Where is Moonlit Field?")
+    assert a.context["recent"][0] == a.context["work_row"]
+    picks = bot.picked_for_you(a.context, exclude=[c["row"] for c in a.cards])
+    assert 0 < len(picks) <= 3
+    assert "Moonlit Field" not in [p["title"] for p in picks]
+    assert all(p["on_view"] and p["reason"] == "Close to Moonlit Field" for p in picks)
+
+
+def test_picked_for_you_steers_away_from_dislikes(bot):
+    a = bot.ask("I loved Moonlit Field and Night Garden but not Blue Dancers")
+    assert "Blue Dancers" not in [p["title"] for p in bot.picked_for_you(a.context)]
