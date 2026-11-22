@@ -548,6 +548,77 @@ body.chat-resizing, body.chat-resizing * {cursor:nwse-resize !important; user-se
 .ft-logo {display:inline-flex; align-items:center; gap:10px; margin-bottom:14px !important;}
 .ft-logo .hdr-mark {background:#ffffff !important; color:#0b0b0c !important; width:32px; height:32px;}
 .ft-logo .hdr-name {color:#ffffff !important; font-size:1.25rem;}
+
+/* ---- chat window colours, from a colour audit (WCAG 2.2: text 4.5:1, control edges and focus 3:1).
+   Six roles: ink #0b0b0c (text, primary buttons, focus), secondary #52525b, control edge #71717a,
+   surfaces #f4f4f5 / #fafafa, "on view" green #047857 on #ecfdf5, and hairlines #e4e4e7. ---- */
+/* Text: one ink and one secondary grey (there were two near-blacks and four greys). */
+#chatpanel .card, #chatpanel .card p, #chatpanel .card strong, #chatpanel .works .work,
+#chatpanel .works .ti, #chatpanel .pk, #chatpanel .pk b {color:#0b0b0c !important;}
+#chatpanel .works .ar, #chatpanel .credit, #chatpanel .card .asof, #chatpanel .pk small,
+#chatpanel #feedback .fb-q, #chatpanel .tips, #chatpanel .picked summary span, #chatpanel .tag.off {color:#52525b !important;}
+#chatpanel .tag.off {background:#f4f4f5 !important;}
+#chatpanel em, #chatpanel i {color:inherit !important;}  /* the theme gave italics their own near-black */
+#chatpanel .pk-text {color:#0b0b0c !important;}
+/* Placeholder: was #94a3b8, 2.6:1. */
+#chatpanel #ask textarea::placeholder {color:#52525b !important; opacity:1 !important;}
+/* Links are underlined, not told apart by colour alone (WCAG 1.4.1). */
+#chatpanel .card a {color:#0b0b0c !important; text-decoration:underline !important; text-underline-offset:2px;}
+#chatpanel .pk b {text-decoration:underline; text-underline-offset:2px;}
+/* Secondary buttons and chips: edges at 4.8:1 (were 1.2-2.6:1); hover fills light grey. */
+#chatpanel #chips button, #chatpanel #feedback .fb-btn, #chat-head #newchat,
+#chatpanel .chat-size-bar button {border:1px solid #71717a !important; color:#0b0b0c !important; background:#ffffff !important;}
+#chatpanel #chips button:hover, #chatpanel #feedback .fb-btn:hover, #chat-head #newchat:hover,
+#chatpanel .chat-size-bar button:hover {background:#f4f4f5 !important; border-color:#0b0b0c !important;}
+/* One action colour: the chip badge was the only orange in the window (2.8:1). */
+#chatpanel #chips button::before {background:#0b0b0c !important; color:#ffffff !important;}
+/* One focus style everywhere: a 2px ink outline with a 2px gap (chips used light blue, 1.8:1). */
+#chatpanel button:focus-visible, #chatpanel a:focus-visible, #chatpanel summary:focus-visible,
+#chat-launch:focus-visible {outline:2px solid #0b0b0c !important; outline-offset:2px !important;}
+#chatpanel #ask:focus-within {box-shadow:0 0 0 2px #0b0b0c, 0 0 0 10px #ffffff, 0 -6px 18px 8px #ffffff !important;}
+
+/* ---- motion and feedback in the chat window (all switched off for "reduce motion") ---- */
+@keyframes askmoma-pop {from {opacity:0; transform:translateY(12px) scale(.97);} to {opacity:1; transform:none;}}
+@keyframes askmoma-in {from {opacity:0; transform:translateY(6px);} to {opacity:1; transform:none;}}
+/* The window grows out of the Ask button when it opens. */
+#chatpanel {transform-origin:bottom right; animation:askmoma-pop .18s ease-out;}
+/* The newest reply fades in; earlier ones stay still (the thread is redrawn on every update). */
+#chatpanel .thread .inner > :last-child {animation:askmoma-in .22s ease-out;}
+/* "Thinking" dots in the palette grey. */
+#chatpanel .typing i {background:#71717a !important;}
+/* The chip row fades at its right edge, a hint that it scrolls sideways. */
+#chatpanel #chips {-webkit-mask-image:linear-gradient(to right, #000 88%, transparent);
+  mask-image:linear-gradient(to right, #000 88%, transparent);}
+/* Artwork cards and "Picked for you" rows respond to the pointer: they are links to moma.org. */
+#chatpanel .works .work {transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;}
+#chatpanel .works .work:hover {transform:translateY(-1px); border-color:#71717a !important;
+  box-shadow:0 8px 18px -10px rgba(11,11,12,.35) !important;}
+#chatpanel .pk {transition:background .15s ease; border-radius:8px; padding-left:4px; padding-right:4px;}
+#chatpanel .pk:hover {background:#f4f4f5;}
+/* A thin, quiet scrollbar. */
+#chatpanel {scrollbar-width:thin; scrollbar-color:#a1a1aa transparent;}
+#chatpanel::-webkit-scrollbar {width:8px;}
+#chatpanel::-webkit-scrollbar-thumb {background:#a1a1aa; border-radius:8px;}
+#chatpanel::-webkit-scrollbar-track {background:transparent;}
+/* Selected text in the brand ink. */
+#chatpanel ::selection {background:#0b0b0c; color:#ffffff;}
+/* Black buttons answer the pointer: lighter on hover, pure black when pressed; grey when Send can't send. */
+#chatpanel #ask button:hover, #chat-launch:hover {background:#27272a !important;}
+#chatpanel #ask button:active, #chat-launch:active {background:#000000 !important;}
+#chatpanel #ask button:disabled {background:#71717a !important; color:#ffffff !important; cursor:not-allowed;}
+/* Links: grey on hover, and a slightly lighter ink once visited, so opened moma.org pages are recognisable. */
+#chatpanel .card a:hover {color:#52525b !important;}
+#chatpanel .card a:visited, #chatpanel .pk:visited b {color:#3f3f46 !important;}
+/* Windows high contrast: keep every control's and card's outline in the system text colour. */
+@media (forced-colors: active) {
+  #chatpanel #chips button, #chatpanel #feedback .fb-btn, #chat-head #newchat, #chatpanel .chat-size-bar button,
+  #chatpanel .works .work, #chatpanel .picked, #chatpanel #ask {border:1px solid CanvasText !important;}
+  #chatpanel .tag {border:1px solid CanvasText;}
+}
+@media (prefers-reduced-motion: reduce) {
+  #chatpanel, #chatpanel * {animation:none !important; transition:none !important;}
+  #chatpanel .works .work:hover {transform:none;}
+}
 """
 
 # The chat window sits at the bottom right, so it grows up and to the left: a grip
